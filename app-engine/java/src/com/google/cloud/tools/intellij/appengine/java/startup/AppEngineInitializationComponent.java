@@ -16,6 +16,10 @@
 
 package com.google.cloud.tools.intellij.appengine.java.startup;
 
+import com.google.cloud.tools.intellij.appengine.java.facet.standard.AppEngineStandardWebIntegration;
+import com.google.cloud.tools.intellij.appengine.java.sdk.CloudSdkService;
+import com.google.cloud.tools.intellij.appengine.java.sdk.CloudSdkService.SdkStatus;
+import com.google.cloud.tools.intellij.appengine.java.sdk.CloudSdkService.SdkStatusUpdateListener;
 import com.google.cloud.tools.intellij.appengine.java.sdk.CloudSdkServiceManager;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.ApplicationComponent;
@@ -27,7 +31,21 @@ public class AppEngineInitializationComponent implements ApplicationComponent {
   @Override
   public void initComponent() {
     if (!ApplicationManager.getApplication().isUnitTestMode()) {
-      ServiceManager.getService(CloudSdkServiceManager.class).getCloudSdkService().activate();
+      CloudSdkService cloudSdkService = ServiceManager.getService(CloudSdkServiceManager.class)
+          .getCloudSdkService();
+      cloudSdkService.activate();
+      cloudSdkService.addStatusUpdateListener(
+          new SdkStatusUpdateListener() {
+            @Override
+            public void onSdkStatusChange(CloudSdkService sdkService, SdkStatus status) {
+              if (status == SdkStatus.READY) {
+                AppEngineStandardWebIntegration.getInstance().setupDevServer();
+              }
+            }
+
+            @Override
+            public void onSdkProcessingStarted() {}
+          });
     }
   }
 }
