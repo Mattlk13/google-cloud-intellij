@@ -48,7 +48,7 @@ public class CloudDependencyVersionWithBomInspection extends CloudBomInspection 
   @Nullable
   @Override
   public String getStaticDescription() {
-    return GoogleCloudApisMessageBundle.getString(
+    return JavaCloudApisMessageBundle.getString(
         "cloud.libraries.version.with.bom.inspection.description");
   }
 
@@ -71,7 +71,7 @@ public class CloudDependencyVersionWithBomInspection extends CloudBomInspection 
       holder.createProblem(
           dependency.getVersion(),
           HighlightSeverity.GENERIC_SERVER_ERROR_OR_WARNING,
-          GoogleCloudApisMessageBundle.message(
+          JavaCloudApisMessageBundle.message(
               "cloud.libraries.version.with.bom.inspection.problem.description"),
           new StripDependencyVersionQuickFix());
     }
@@ -93,7 +93,7 @@ public class CloudDependencyVersionWithBomInspection extends CloudBomInspection 
     @NotNull
     @Override
     public String getFamilyName() {
-      return GoogleCloudApisMessageBundle.message(
+      return JavaCloudApisMessageBundle.message(
           "cloud.libraries.version.with.bom.quickfix.title");
     }
 

@@ -51,7 +51,7 @@ import org.jetbrains.idea.maven.aether.ArtifactRepositoryManager;
 
 /** Aether-based application service providing Cloud API Maven functionality. */
 public class CloudApiMavenService {
-  private static final Logger logger = Logger.getInstance(CloudApiManager.class);
+  private static final Logger logger = Logger.getInstance(CloudApiMavenService.class);
 
   private final RepositorySystem SYSTEM;
   private final RepositorySystemSession SESSION;
