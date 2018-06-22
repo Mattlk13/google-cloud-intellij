@@ -30,4 +30,11 @@ public interface CloudApiUiExtensionProvider {
   Set<JComponent> createAdditionalCloudApiComponents();
 
   void setCloudApiComponents(Project project, ModulesComboBox moduleComboBox, JLabel versionLabel);
+
+  interface BaseCloudApiUiState {
+    Project getProject();
+    ModulesComboBox getModulesComboBox();
+    JLabel getVersionLabel();
+
+  }
 }
