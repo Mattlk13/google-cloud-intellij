@@ -19,6 +19,8 @@
     <extensionPoints>
         <extensionPoint qualifiedName="com.google.gct.cloudapis.cloudApiRunConfiguration"
                         interface="com.google.cloud.tools.intellij.cloudapis.CloudApiRunConfigurationProvider"/>
+        <extensionPoint qualifiedName="com.google.gct.cloudapis.cloudApiUiExtension"
+                        interface="com.google.cloud.tools.intellij.cloudapis.CloudApiUiExtensionProvider"/>
     </extensionPoints>
     <extensions defaultExtensionNs="com.intellij">
         <applicationService
