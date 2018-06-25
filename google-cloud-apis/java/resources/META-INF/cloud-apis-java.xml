@@ -46,5 +46,10 @@
                          implementationClass="com.google.cloud.tools.intellij.cloudapis.java.CloudDependencyWithNoBomInspection"/>
     </extensions>
 
+    <extensions defaultExtensionNs="com.google.gct.cloudapis">
+        <cloudApiRunConfiguration
+                implementation="com.google.cloud.tools.intellij.cloudapis.java.JavaApplicationCloudApiRunConfigurationProvider"/>
+    </extensions>
+
 </idea-plugin>
 

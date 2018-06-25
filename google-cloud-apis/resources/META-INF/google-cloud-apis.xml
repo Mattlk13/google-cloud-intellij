@@ -28,10 +28,6 @@
         <applicationService
                 serviceImplementation="com.google.cloud.tools.intellij.cloudapis.CloudApiUiExtensionServiceManager"/>
     </extensions>
-    <extensions defaultExtensionNs="com.google.gct.cloudapis">
-        <cloudApiRunConfiguration
-                implementation="com.google.cloud.tools.intellij.cloudapis.JavaApplicationCloudApiRunConfigurationProvider"/>
-    </extensions>
 
     <actions>
         <group id="GoogleCloudTools.cloudapis">
