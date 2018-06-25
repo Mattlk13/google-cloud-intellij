@@ -22,8 +22,10 @@ import com.intellij.openapi.project.Project;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
+import org.jetbrains.annotations.NotNull;
 
 public interface CloudApiUiExtensionService {
   enum EXTENSION_COMPONENT_LOCATION {
@@ -39,8 +41,12 @@ public interface CloudApiUiExtensionService {
 
   List<Optional<String>> onCloudLibrarySelectionChange(CloudLibrary currentCloudLibrary);
 
+  void doUserConfirmedCloudLibraryAction(@NotNull Set<CloudLibrary> libraries);
+
   interface CloudApiUiPresenter {
     Project getProject();
+
+    Optional<CloudLibrary> getSelectedLibrary();
 
     ModulesComboBox getModulesComboBox();
 

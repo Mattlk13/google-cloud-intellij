@@ -47,6 +47,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -180,6 +181,14 @@ final class GoogleCloudApiSelectorPanel {
     return projectSelector;
   }
 
+  JLabel getVersionLabel() {
+    return detailsPanel.getVersionLabel();
+  }
+
+  Optional<CloudLibrary> getCurrentCloudLibrary() {
+    return Optional.ofNullable(detailsPanel.getCurrentCloudLibrary());
+  }
+
   /**
    * Initializes some UI components in this panel that require special set-up.
    *
@@ -208,15 +217,17 @@ final class GoogleCloudApiSelectorPanel {
 
     projectSelector = new ProjectSelector(project);
     projectSelector.addProjectSelectionListener(cloudProject -> updateManagementUI());
+  }
 
+  void createExtensionUiComponents() {
     // insert extension UI components if present.
     // build insert parent component map.
-    EnumMap<EXTENSION_COMPONENT_LOCATION,JComponent> insertLocations = new EnumMap<>(
-        EXTENSION_COMPONENT_LOCATION.class);
+    EnumMap<EXTENSION_COMPONENT_LOCATION, JComponent> insertLocations =
+        new EnumMap<>(EXTENSION_COMPONENT_LOCATION.class);
     insertLocations.put(EXTENSION_COMPONENT_LOCATION.BOTTOM_LINE_1, bottomComponent1);
     insertLocations.put(EXTENSION_COMPONENT_LOCATION.BOTTOM_LINE_2, bottomComponent2);
     // for all present components, insert them.
-    for (EXTENSION_COMPONENT_LOCATION nextLocation: insertLocations.keySet()) {
+    for (EXTENSION_COMPONENT_LOCATION nextLocation : insertLocations.keySet()) {
       CloudApiUiExtensionServiceManager.getInstance()
           .getComponentAt(nextLocation)
           .ifPresent(comp -> insertLocations.get(nextLocation).add(comp));

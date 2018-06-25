@@ -17,17 +17,9 @@
 package com.google.cloud.tools.intellij.cloudapis;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.when;
 
-import com.google.cloud.tools.intellij.GctFeature;
-import com.google.cloud.tools.intellij.cloudapis.CloudApiMavenService.LibraryVersionFromBomException;
-import com.google.cloud.tools.intellij.project.CloudProject;
-import com.google.cloud.tools.intellij.project.ProjectSelector;
 import com.google.cloud.tools.intellij.service.PluginInfoService;
 import com.google.cloud.tools.intellij.testing.CloudToolsRule;
-import com.google.cloud.tools.intellij.testing.MavenTestUtils;
 import com.google.cloud.tools.intellij.testing.TestFixture;
 import com.google.cloud.tools.intellij.testing.TestModule;
 import com.google.cloud.tools.intellij.testing.TestService;
@@ -37,39 +29,24 @@ import com.google.cloud.tools.intellij.testing.apis.TestCloudLibrary.TestCloudLi
 import com.google.cloud.tools.libraries.json.CloudLibrary;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.intellij.icons.AllIcons.General;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.application.Result;
-import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.testFramework.ThreadTracker;
 import com.intellij.testFramework.fixtures.IdeaProjectTestFixture;
-import com.intellij.util.xml.DomUtil;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
 import javax.swing.JPanel;
 import javax.swing.JTable;
 import javax.swing.table.TableModel;
 import org.eclipse.aether.version.Version;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.idea.maven.dom.MavenDomUtil;
-import org.jetbrains.idea.maven.dom.model.MavenDomDependency;
-import org.jetbrains.idea.maven.dom.model.MavenDomProjectModel;
-import org.jetbrains.idea.maven.project.MavenProject;
-import org.jetbrains.idea.maven.project.MavenProjectsManager;
-import org.jetbrains.idea.maven.server.MavenServerManager;
-import org.jetbrains.idea.maven.wizards.MavenModuleBuilder;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -133,13 +110,14 @@ public final class GoogleCloudApiSelectorPanelTest {
   @TestFixture private IdeaProjectTestFixture testFixture;
 
   @Mock @TestService private PluginInfoService pluginInfoService;
-  @Mock @TestService CloudApiMavenService mavenService;
-
-  private MavenModuleBuilder moduleBuilder;
+  //  @Mock @TestService CloudApiMavenService mavenService;
+  //
+  //  private MavenModuleBuilder moduleBuilder;
 
   @Before
   public void setUp() {
-    moduleBuilder = MavenTestUtils.getInstance().initMavenModuleBuilder(testFixture.getProject());
+    // moduleBuilder =
+    // MavenTestUtils.getInstance().initMavenModuleBuilder(testFixture.getProject());
 
     // TODO: remove after Batik fix is available in IDEA itself - happens when SVG icons are used.
     // See b4df0c72ee3e88bf3cf48fde0a1e19fb948757fe in IJ Community Git.
@@ -280,261 +258,274 @@ public final class GoogleCloudApiSelectorPanelTest {
     assertDetailsShownForLibrary(panel.getDetailsPanel(), LIBRARY_1, JAVA_CLIENT_1);
   }
 
-  @Test
-  public void getPanel_withAvailableBomVersions_populatesBomVersionsInReverseOrder() {
-    // TODO (eshaul): remove once feature is released
-    when(pluginInfoService.shouldEnable(GctFeature.BOM)).thenReturn(true);
-
-    when(mavenService.getAllBomVersions()).thenReturn(ImmutableList.of("v0", "v1", "v2"));
-
-    GoogleCloudApiSelectorPanel panel =
-        new GoogleCloudApiSelectorPanel(ImmutableList.of(), testFixture.getProject());
-
-    JComboBox<String> bomComboBox = panel.getBomComboBox();
-
-    assertThat(panel.getBomSelectorLabel().isVisible()).isTrue();
-    assertThat(panel.getBomComboBox().isVisible()).isTrue();
-    assertThat(bomComboBox.getItemCount()).isEqualTo(3);
-
-    assertThat(bomComboBox.getItemAt(0)).isEqualTo("v2");
-    assertThat(bomComboBox.getItemAt(1)).isEqualTo("v1");
-    assertThat(bomComboBox.getItemAt(2)).isEqualTo("v0");
-  }
-
-  @Test
-  public void getPanel_withManyAvailableBomVersions_limitsNumBomVersions() {
-    // TODO (eshaul): remove once feature is released
-    when(pluginInfoService.shouldEnable(GctFeature.BOM)).thenReturn(true);
-
-    List<String> versions = Lists.newArrayList();
-    for (int i = 0; i < 20; i++) {
-      versions.add("v" + i);
-    }
-
-    when(mavenService.getAllBomVersions()).thenReturn(versions);
-
-    GoogleCloudApiSelectorPanel panel =
-        new GoogleCloudApiSelectorPanel(ImmutableList.of(), testFixture.getProject());
-
-    assertThat(panel.getBomComboBox().getItemCount()).isEqualTo(5);
-  }
-
-  @Test
-  public void getPanel_withNoAvailableBomVersions_hidesBomUi() {
-    // TODO (eshaul): remove once feature is released
-    when(pluginInfoService.shouldEnable(GctFeature.BOM)).thenReturn(true);
-
-    when(mavenService.getAllBomVersions()).thenReturn(ImmutableList.of());
-
-    GoogleCloudApiSelectorPanel panel =
-        new GoogleCloudApiSelectorPanel(ImmutableList.of(), testFixture.getProject());
-
-    assertThat(panel.getBomSelectorLabel().isVisible()).isFalse();
-    assertThat(panel.getBomComboBox().isVisible()).isFalse();
-  }
-
-  @Test
-  public void getPanel_withVersionReturnedFromBomQuery_displaysVersionFromBom()
-      throws LibraryVersionFromBomException {
-    // TODO (eshaul): remove once feature is released
-    when(pluginInfoService.shouldEnable(GctFeature.BOM)).thenReturn(true);
-
-    String libVersion = "9.9-alpha";
-    when(mavenService.getManagedDependencyVersion(any(), anyString()))
-        .thenReturn(Optional.of(libVersion));
-
-    CloudLibrary cloudLibrary = LIBRARY_1.toCloudLibrary();
-    GoogleCloudApiSelectorPanel panel =
-        new GoogleCloudApiSelectorPanel(ImmutableList.of(cloudLibrary), testFixture.getProject());
-    new GoogleCloudApiSelectorPanel(ImmutableList.of(cloudLibrary), testFixture.getProject());
-
-    panel
-        .getDetailsPanel()
-        .setCloudLibrary(cloudLibrary, BOM_VERSION, panel.getApiManagementMap().get(cloudLibrary));
-
-    assertThat(panel.getDetailsPanel().getVersionLabel().getText())
-        .isEqualTo("Version: " + libVersion);
-  }
-
-  @Test
-  public void getPanel_withNoVersionReturnedFromBomQuery_fallsBackToAndDisplaysStaticVersion() {
-    // TODO (eshaul): remove once feature is released
-    when(pluginInfoService.shouldEnable(GctFeature.BOM)).thenReturn(true);
-
-    CloudLibrary cloudLibrary = LIBRARY_1.toCloudLibrary();
-    GoogleCloudApiSelectorPanel panel =
-        new GoogleCloudApiSelectorPanel(ImmutableList.of(cloudLibrary), testFixture.getProject());
-
-    panel
-        .getDetailsPanel()
-        .setCloudLibrary(
-            cloudLibrary, null /*bomVersion*/, panel.getApiManagementMap().get(cloudLibrary));
-
-    assertThat(panel.getDetailsPanel().getVersionLabel().getText())
-        .isEqualTo("Version: " + JAVA_CLIENT_MAVEN_COORDS_1.version());
-  }
-
-  @Test
-  public void getPanel_withBomAndNoDependencyVersion_displaysVersionNotFoundMessage()
-      throws LibraryVersionFromBomException {
-    // TODO (eshaul): remove once feature is released
-    when(pluginInfoService.shouldEnable(GctFeature.BOM)).thenReturn(true);
-
-    when(mavenService.getManagedDependencyVersion(any(), anyString())).thenReturn(Optional.empty());
-
-    CloudLibrary cloudLibrary = LIBRARY_1.toCloudLibrary();
-    GoogleCloudApiSelectorPanel panel =
-        new GoogleCloudApiSelectorPanel(ImmutableList.of(cloudLibrary), testFixture.getProject());
-
-    panel
-        .getDetailsPanel()
-        .setCloudLibrary(cloudLibrary, BOM_VERSION, panel.getApiManagementMap().get(cloudLibrary));
-
-    assertThat(panel.getDetailsPanel().getVersionLabel().getText())
-        .isEqualTo(
-            "Version: Library was not found in version "
-                + BOM_VERSION
-                + " of the Google Cloud Java Libraries");
-    assertThat(panel.getDetailsPanel().getVersionLabel().getIcon()).isEqualTo(General.Error);
-  }
-
-  @Test
-  public void getPanel_whenFetchingDependencyVersionFromBomThrowsException_displaysErrorMessage()
-      throws LibraryVersionFromBomException {
-    // TODO (eshaul): remove once feature is released
-    when(pluginInfoService.shouldEnable(GctFeature.BOM)).thenReturn(true);
-
-    when(mavenService.getManagedDependencyVersion(any(), anyString()))
-        .thenThrow(new LibraryVersionFromBomException("Bom not found"));
-
-    CloudLibrary cloudLibrary = LIBRARY_1.toCloudLibrary();
-    GoogleCloudApiSelectorPanel panel =
-        new GoogleCloudApiSelectorPanel(ImmutableList.of(cloudLibrary), testFixture.getProject());
-
-    panel
-        .getDetailsPanel()
-        .setCloudLibrary(cloudLibrary, BOM_VERSION, panel.getApiManagementMap().get(cloudLibrary));
-
-    assertThat(panel.getDetailsPanel().getVersionLabel().getText())
-        .isEqualTo("Version: Error occurred fetching library version");
-    assertThat(panel.getDetailsPanel().getVersionLabel().getIcon()).isEqualTo(General.Error);
-  }
-
-  @Test
-  public void getPanel_withBomInPom_notPartOfAvailableBoms_addsAndPreselectsConfiguredVersion() {
-    // TODO (eshaul): remove once feature is released
-    when(pluginInfoService.shouldEnable(GctFeature.BOM)).thenReturn(true);
-
-    when(mavenService.getAllBomVersions()).thenReturn(ImmutableList.of("v1", "v2", "v3"));
-
-    try {
-      ApplicationManager.getApplication()
-          .invokeAndWait(
-              () -> {
-                Module module =
-                    MavenTestUtils.getInstance()
-                        .createNewMavenModule(moduleBuilder, testFixture.getProject());
-
-                String preconfigureBomVersion = "v0-alpha";
-                writeBomDependency(module, preconfigureBomVersion);
-                CloudLibraryProjectState.getInstance(testFixture.getProject())
-                    .syncCloudLibrariesBom();
-
-                GoogleCloudApiSelectorPanel panel =
-                    new GoogleCloudApiSelectorPanel(ImmutableList.of(), testFixture.getProject());
-
-                // Set the selected module to the one with the preconfigured BOM
-                panel.getModulesComboBox().setSelectedItem(module);
-
-                JComboBox<String> bomComboBox = panel.getBomComboBox();
-                assertThat(bomComboBox.getItemCount()).isEqualTo(4);
-                assertThat(bomComboBox.getItemAt(0)).isEqualTo("v3");
-                assertThat(bomComboBox.getItemAt(1)).isEqualTo("v2");
-                assertThat(bomComboBox.getItemAt(2)).isEqualTo("v1");
-                assertThat(bomComboBox.getItemAt(3)).isEqualTo("v0-alpha");
-
-                assertThat(bomComboBox.getSelectedItem()).isEqualTo(preconfigureBomVersion);
-              });
-    } finally {
-      MavenServerManager.getInstance().shutdown(true);
-    }
-  }
-
-  @Test
-  public void getPanel_withBomInPom_partOfAvailableBoms_preselectsConfiguredVersion() {
-    // TODO (eshaul): remove once feature is released
-    when(pluginInfoService.shouldEnable(GctFeature.BOM)).thenReturn(true);
-
-    when(mavenService.getAllBomVersions()).thenReturn(ImmutableList.of("v0", "v1", "v2"));
-
-    try {
-      ApplicationManager.getApplication()
-          .invokeAndWait(
-              () -> {
-                Module module =
-                    MavenTestUtils.getInstance()
-                        .createNewMavenModule(moduleBuilder, testFixture.getProject());
-
-                String preconfigureBomVersion = "v1";
-                writeBomDependency(module, preconfigureBomVersion);
-                CloudLibraryProjectState.getInstance(testFixture.getProject())
-                    .syncCloudLibrariesBom();
-
-                GoogleCloudApiSelectorPanel panel =
-                    new GoogleCloudApiSelectorPanel(ImmutableList.of(), testFixture.getProject());
-
-                // Set the selected module to the one with the preconfigured BOM
-                panel.getModulesComboBox().setSelectedItem(module);
-
-                JComboBox<String> bomComboBox = panel.getBomComboBox();
-                assertThat(bomComboBox.getItemCount()).isEqualTo(3);
-                assertThat(bomComboBox.getItemAt(0)).isEqualTo("v2");
-                assertThat(bomComboBox.getItemAt(1)).isEqualTo("v1");
-                assertThat(bomComboBox.getItemAt(2)).isEqualTo("v0");
-
-                assertThat(bomComboBox.getSelectedItem()).isEqualTo(preconfigureBomVersion);
-              });
-    } finally {
-      MavenServerManager.getInstance().shutdown(true);
-    }
-  }
-
-  @Test
-  public void getPanel_withBomInPom_withNoAvailableBoms_hasOnlyPreconfiguredBom() {
-    // TODO (eshaul): remove once feature is released
-    when(pluginInfoService.shouldEnable(GctFeature.BOM)).thenReturn(true);
-
-    when(mavenService.getAllBomVersions()).thenReturn(ImmutableList.of());
-
-    try {
-      ApplicationManager.getApplication()
-          .invokeAndWait(
-              () -> {
-                Module module =
-                    MavenTestUtils.getInstance()
-                        .createNewMavenModule(moduleBuilder, testFixture.getProject());
-
-                String preconfigureBomVersion = "v1";
-                writeBomDependency(module, preconfigureBomVersion);
-                CloudLibraryProjectState.getInstance(testFixture.getProject())
-                    .syncCloudLibrariesBom();
-
-                GoogleCloudApiSelectorPanel panel =
-                    new GoogleCloudApiSelectorPanel(ImmutableList.of(), testFixture.getProject());
-
-                // Set the selected module to the one with the preconfigured BOM
-                panel.getModulesComboBox().setSelectedItem(module);
-
-                JComboBox<String> bomComboBox = panel.getBomComboBox();
-                assertThat(bomComboBox.getItemCount()).isEqualTo(1);
-                assertThat(bomComboBox.getItemAt(0)).isEqualTo("v1");
-
-                assertThat(bomComboBox.getSelectedItem()).isEqualTo(preconfigureBomVersion);
-              });
-    } finally {
-      MavenServerManager.getInstance().shutdown(true);
-    }
-  }
+  //  @Test
+  //  public void getPanel_withAvailableBomVersions_populatesBomVersionsInReverseOrder() {
+  //    // TODO (eshaul): remove once feature is released
+  //    when(pluginInfoService.shouldEnable(GctFeature.BOM)).thenReturn(true);
+  //
+  //    when(mavenService.getAllBomVersions()).thenReturn(ImmutableList.of("v0", "v1", "v2"));
+  //
+  //    GoogleCloudApiSelectorPanel panel =
+  //        new GoogleCloudApiSelectorPanel(ImmutableList.of(), testFixture.getProject());
+  //
+  //    JComboBox<String> bomComboBox = panel.getBomComboBox();
+  //
+  //    assertThat(panel.getBomSelectorLabel().isVisible()).isTrue();
+  //    assertThat(panel.getBomComboBox().isVisible()).isTrue();
+  //    assertThat(bomComboBox.getItemCount()).isEqualTo(3);
+  //
+  //    assertThat(bomComboBox.getItemAt(0)).isEqualTo("v2");
+  //    assertThat(bomComboBox.getItemAt(1)).isEqualTo("v1");
+  //    assertThat(bomComboBox.getItemAt(2)).isEqualTo("v0");
+  //  }
+  //
+  //  @Test
+  //  public void getPanel_withManyAvailableBomVersions_limitsNumBomVersions() {
+  //    // TODO (eshaul): remove once feature is released
+  //    when(pluginInfoService.shouldEnable(GctFeature.BOM)).thenReturn(true);
+  //
+  //    List<String> versions = Lists.newArrayList();
+  //    for (int i = 0; i < 20; i++) {
+  //      versions.add("v" + i);
+  //    }
+  //
+  //    when(mavenService.getAllBomVersions()).thenReturn(versions);
+  //
+  //    GoogleCloudApiSelectorPanel panel =
+  //        new GoogleCloudApiSelectorPanel(ImmutableList.of(), testFixture.getProject());
+  //
+  //    assertThat(panel.getBomComboBox().getItemCount()).isEqualTo(5);
+  //  }
+  //
+  //  @Test
+  //  public void getPanel_withNoAvailableBomVersions_hidesBomUi() {
+  //    // TODO (eshaul): remove once feature is released
+  //    when(pluginInfoService.shouldEnable(GctFeature.BOM)).thenReturn(true);
+  //
+  //    when(mavenService.getAllBomVersions()).thenReturn(ImmutableList.of());
+  //
+  //    GoogleCloudApiSelectorPanel panel =
+  //        new GoogleCloudApiSelectorPanel(ImmutableList.of(), testFixture.getProject());
+  //
+  //    assertThat(panel.getBomSelectorLabel().isVisible()).isFalse();
+  //    assertThat(panel.getBomComboBox().isVisible()).isFalse();
+  //  }
+  //
+  //  @Test
+  //  public void getPanel_withVersionReturnedFromBomQuery_displaysVersionFromBom()
+  //      throws LibraryVersionFromBomException {
+  //    // TODO (eshaul): remove once feature is released
+  //    when(pluginInfoService.shouldEnable(GctFeature.BOM)).thenReturn(true);
+  //
+  //    String libVersion = "9.9-alpha";
+  //    when(mavenService.getManagedDependencyVersion(any(), anyString()))
+  //        .thenReturn(Optional.of(libVersion));
+  //
+  //    CloudLibrary cloudLibrary = LIBRARY_1.toCloudLibrary();
+  //    GoogleCloudApiSelectorPanel panel =
+  //        new GoogleCloudApiSelectorPanel(ImmutableList.of(cloudLibrary),
+  // testFixture.getProject());
+  //    new GoogleCloudApiSelectorPanel(ImmutableList.of(cloudLibrary), testFixture.getProject());
+  //
+  //    panel
+  //        .getDetailsPanel()
+  //        .setCloudLibrary(cloudLibrary, BOM_VERSION,
+  // panel.getApiManagementMap().get(cloudLibrary));
+  //
+  //    assertThat(panel.getDetailsPanel().getVersionLabel().getText())
+  //        .isEqualTo("Version: " + libVersion);
+  //  }
+  //
+  //  @Test
+  //  public void getPanel_withNoVersionReturnedFromBomQuery_fallsBackToAndDisplaysStaticVersion() {
+  //    // TODO (eshaul): remove once feature is released
+  //    when(pluginInfoService.shouldEnable(GctFeature.BOM)).thenReturn(true);
+  //
+  //    CloudLibrary cloudLibrary = LIBRARY_1.toCloudLibrary();
+  //    GoogleCloudApiSelectorPanel panel =
+  //        new GoogleCloudApiSelectorPanel(ImmutableList.of(cloudLibrary),
+  // testFixture.getProject());
+  //
+  //    panel
+  //        .getDetailsPanel()
+  //        .setCloudLibrary(
+  //            cloudLibrary, null /*bomVersion*/, panel.getApiManagementMap().get(cloudLibrary));
+  //
+  //    assertThat(panel.getDetailsPanel().getVersionLabel().getText())
+  //        .isEqualTo("Version: " + JAVA_CLIENT_MAVEN_COORDS_1.version());
+  //  }
+  //
+  //  @Test
+  //  public void getPanel_withBomAndNoDependencyVersion_displaysVersionNotFoundMessage()
+  //      throws LibraryVersionFromBomException {
+  //    // TODO (eshaul): remove once feature is released
+  //    when(pluginInfoService.shouldEnable(GctFeature.BOM)).thenReturn(true);
+  //
+  //    when(mavenService.getManagedDependencyVersion(any(),
+  // anyString())).thenReturn(Optional.empty());
+  //
+  //    CloudLibrary cloudLibrary = LIBRARY_1.toCloudLibrary();
+  //    GoogleCloudApiSelectorPanel panel =
+  //        new GoogleCloudApiSelectorPanel(ImmutableList.of(cloudLibrary),
+  // testFixture.getProject());
+  //
+  //    panel
+  //        .getDetailsPanel()
+  //        .setCloudLibrary(cloudLibrary, BOM_VERSION,
+  // panel.getApiManagementMap().get(cloudLibrary));
+  //
+  //    assertThat(panel.getDetailsPanel().getVersionLabel().getText())
+  //        .isEqualTo(
+  //            "Version: Library was not found in version "
+  //                + BOM_VERSION
+  //                + " of the Google Cloud Java Libraries");
+  //    assertThat(panel.getDetailsPanel().getVersionLabel().getIcon()).isEqualTo(General.Error);
+  //  }
+  //
+  //  @Test
+  //  public void
+  // getPanel_whenFetchingDependencyVersionFromBomThrowsException_displaysErrorMessage()
+  //      throws LibraryVersionFromBomException {
+  //    // TODO (eshaul): remove once feature is released
+  //    when(pluginInfoService.shouldEnable(GctFeature.BOM)).thenReturn(true);
+  //
+  //    when(mavenService.getManagedDependencyVersion(any(), anyString()))
+  //        .thenThrow(new LibraryVersionFromBomException("Bom not found"));
+  //
+  //    CloudLibrary cloudLibrary = LIBRARY_1.toCloudLibrary();
+  //    GoogleCloudApiSelectorPanel panel =
+  //        new GoogleCloudApiSelectorPanel(ImmutableList.of(cloudLibrary),
+  // testFixture.getProject());
+  //
+  //    panel
+  //        .getDetailsPanel()
+  //        .setCloudLibrary(cloudLibrary, BOM_VERSION,
+  // panel.getApiManagementMap().get(cloudLibrary));
+  //
+  //    assertThat(panel.getDetailsPanel().getVersionLabel().getText())
+  //        .isEqualTo("Version: Error occurred fetching library version");
+  //    assertThat(panel.getDetailsPanel().getVersionLabel().getIcon()).isEqualTo(General.Error);
+  //  }
+  //
+  //  @Test
+  //  public void getPanel_withBomInPom_notPartOfAvailableBoms_addsAndPreselectsConfiguredVersion()
+  // {
+  //    // TODO (eshaul): remove once feature is released
+  //    when(pluginInfoService.shouldEnable(GctFeature.BOM)).thenReturn(true);
+  //
+  //    when(mavenService.getAllBomVersions()).thenReturn(ImmutableList.of("v1", "v2", "v3"));
+  //
+  //    try {
+  //      ApplicationManager.getApplication()
+  //          .invokeAndWait(
+  //              () -> {
+  //                Module module =
+  //                    MavenTestUtils.getInstance()
+  //                        .createNewMavenModule(moduleBuilder, testFixture.getProject());
+  //
+  //                String preconfigureBomVersion = "v0-alpha";
+  //                writeBomDependency(module, preconfigureBomVersion);
+  //                CloudLibraryProjectState.getInstance(testFixture.getProject())
+  //                    .syncCloudLibrariesBom();
+  //
+  //                GoogleCloudApiSelectorPanel panel =
+  //                    new GoogleCloudApiSelectorPanel(ImmutableList.of(),
+  // testFixture.getProject());
+  //
+  //                // Set the selected module to the one with the preconfigured BOM
+  //                panel.getModulesComboBox().setSelectedItem(module);
+  //
+  //                JComboBox<String> bomComboBox = panel.getBomComboBox();
+  //                assertThat(bomComboBox.getItemCount()).isEqualTo(4);
+  //                assertThat(bomComboBox.getItemAt(0)).isEqualTo("v3");
+  //                assertThat(bomComboBox.getItemAt(1)).isEqualTo("v2");
+  //                assertThat(bomComboBox.getItemAt(2)).isEqualTo("v1");
+  //                assertThat(bomComboBox.getItemAt(3)).isEqualTo("v0-alpha");
+  //
+  //                assertThat(bomComboBox.getSelectedItem()).isEqualTo(preconfigureBomVersion);
+  //              });
+  //    } finally {
+  //      MavenServerManager.getInstance().shutdown(true);
+  //    }
+  //  }
+  //
+  //  @Test
+  //  public void getPanel_withBomInPom_partOfAvailableBoms_preselectsConfiguredVersion() {
+  //    // TODO (eshaul): remove once feature is released
+  //    when(pluginInfoService.shouldEnable(GctFeature.BOM)).thenReturn(true);
+  //
+  //    when(mavenService.getAllBomVersions()).thenReturn(ImmutableList.of("v0", "v1", "v2"));
+  //
+  //    try {
+  //      ApplicationManager.getApplication()
+  //          .invokeAndWait(
+  //              () -> {
+  //                Module module =
+  //                    MavenTestUtils.getInstance()
+  //                        .createNewMavenModule(moduleBuilder, testFixture.getProject());
+  //
+  //                String preconfigureBomVersion = "v1";
+  //                writeBomDependency(module, preconfigureBomVersion);
+  //                CloudLibraryProjectState.getInstance(testFixture.getProject())
+  //                    .syncCloudLibrariesBom();
+  //
+  //                GoogleCloudApiSelectorPanel panel =
+  //                    new GoogleCloudApiSelectorPanel(ImmutableList.of(),
+  // testFixture.getProject());
+  //
+  //                // Set the selected module to the one with the preconfigured BOM
+  //                panel.getModulesComboBox().setSelectedItem(module);
+  //
+  //                JComboBox<String> bomComboBox = panel.getBomComboBox();
+  //                assertThat(bomComboBox.getItemCount()).isEqualTo(3);
+  //                assertThat(bomComboBox.getItemAt(0)).isEqualTo("v2");
+  //                assertThat(bomComboBox.getItemAt(1)).isEqualTo("v1");
+  //                assertThat(bomComboBox.getItemAt(2)).isEqualTo("v0");
+  //
+  //                assertThat(bomComboBox.getSelectedItem()).isEqualTo(preconfigureBomVersion);
+  //              });
+  //    } finally {
+  //      MavenServerManager.getInstance().shutdown(true);
+  //    }
+  //  }
+  //
+  //  @Test
+  //  public void getPanel_withBomInPom_withNoAvailableBoms_hasOnlyPreconfiguredBom() {
+  //    // TODO (eshaul): remove once feature is released
+  //    when(pluginInfoService.shouldEnable(GctFeature.BOM)).thenReturn(true);
+  //
+  //    when(mavenService.getAllBomVersions()).thenReturn(ImmutableList.of());
+  //
+  //    try {
+  //      ApplicationManager.getApplication()
+  //          .invokeAndWait(
+  //              () -> {
+  //                Module module =
+  //                    MavenTestUtils.getInstance()
+  //                        .createNewMavenModule(moduleBuilder, testFixture.getProject());
+  //
+  //                String preconfigureBomVersion = "v1";
+  //                writeBomDependency(module, preconfigureBomVersion);
+  //                CloudLibraryProjectState.getInstance(testFixture.getProject())
+  //                    .syncCloudLibrariesBom();
+  //
+  //                GoogleCloudApiSelectorPanel panel =
+  //                    new GoogleCloudApiSelectorPanel(ImmutableList.of(),
+  // testFixture.getProject());
+  //
+  //                // Set the selected module to the one with the preconfigured BOM
+  //                panel.getModulesComboBox().setSelectedItem(module);
+  //
+  //                JComboBox<String> bomComboBox = panel.getBomComboBox();
+  //                assertThat(bomComboBox.getItemCount()).isEqualTo(1);
+  //                assertThat(bomComboBox.getItemAt(0)).isEqualTo("v1");
+  //
+  //                assertThat(bomComboBox.getSelectedItem()).isEqualTo(preconfigureBomVersion);
+  //              });
+  //    } finally {
+  //      MavenServerManager.getInstance().shutdown(true);
+  //    }
+  //  }
 
   @Test
   public void getSelectedModule_withNoneSelected_returnsDefaultModule() {
@@ -645,128 +636,135 @@ public final class GoogleCloudApiSelectorPanelTest {
     assertThat(apisToEnable).containsExactly(library);
   }
 
-  @Test
-  public void
-      getApisToEnable_withAllLibrariesChecked_AndNoShouldEnableChecked_returnsNoneEnabled() {
-    CloudLibrary library1 = LIBRARY_1.toCloudLibrary();
-    CloudLibrary library2 = LIBRARY_2.toCloudLibrary();
-
-    GoogleCloudApiSelectorPanel panel =
-        new GoogleCloudApiSelectorPanel(
-            ImmutableList.of(library1, library2), testFixture.getProject());
-    JTable table = panel.getCloudLibrariesTable();
-
-    checkAddLibraryCheckbox(table, 0);
-    checkAddLibraryCheckbox(table, 1);
-
-    Map<CloudLibrary, CloudApiManagementSpec> apiManagementMap = panel.getApiManagementMap();
-
-    panel.getDetailsPanel().setCloudLibrary(library1, BOM_VERSION, apiManagementMap.get(library1));
-    checkEnableCheckbox(panel.getDetailsPanel().getEnableApiCheckbox(), false);
-
-    panel.getDetailsPanel().setCloudLibrary(library2, BOM_VERSION, apiManagementMap.get(library2));
-    checkEnableCheckbox(panel.getDetailsPanel().getEnableApiCheckbox(), false);
-
-    assertThat(panel.getApisToEnable()).isEmpty();
-  }
-
-  @Test
-  public void
-      getApisToEnable_withAllLibrariesChecked_AndSomeShouldEnableChecked_returnsSomeEnabled() {
-    CloudLibrary library1 = LIBRARY_1.toCloudLibrary();
-    CloudLibrary library2 = LIBRARY_2.toCloudLibrary();
-
-    GoogleCloudApiSelectorPanel panel =
-        new GoogleCloudApiSelectorPanel(
-            ImmutableList.of(library1, library2), testFixture.getProject());
-    JTable table = panel.getCloudLibrariesTable();
-
-    checkAddLibraryCheckbox(table, 0);
-    checkAddLibraryCheckbox(table, 1);
-
-    Map<CloudLibrary, CloudApiManagementSpec> apiManagementMap = panel.getApiManagementMap();
-
-    panel.getDetailsPanel().setCloudLibrary(library1, BOM_VERSION, apiManagementMap.get(library1));
-    checkEnableCheckbox(panel.getDetailsPanel().getEnableApiCheckbox(), false);
-
-    panel.getDetailsPanel().setCloudLibrary(library2, BOM_VERSION, apiManagementMap.get(library2));
-    checkEnableCheckbox(panel.getDetailsPanel().getEnableApiCheckbox(), true);
-
-    assertThat(panel.getApisToEnable()).containsExactly(library2);
-  }
-
-  @Test
-  public void
-      getApisToEnable_withNoLibrariesChecked_AndAllShouldEnableChecked_returnsNoneEnabled() {
-    CloudLibrary library1 = LIBRARY_1.toCloudLibrary();
-    CloudLibrary library2 = LIBRARY_2.toCloudLibrary();
-
-    GoogleCloudApiSelectorPanel panel =
-        new GoogleCloudApiSelectorPanel(
-            ImmutableList.of(library1, library2), testFixture.getProject());
-
-    Map<CloudLibrary, CloudApiManagementSpec> apiManagementMap = panel.getApiManagementMap();
-
-    panel.getDetailsPanel().setCloudLibrary(library1, BOM_VERSION, apiManagementMap.get(library1));
-    checkEnableCheckbox(panel.getDetailsPanel().getEnableApiCheckbox(), true);
-
-    panel.getDetailsPanel().setCloudLibrary(library2, BOM_VERSION, apiManagementMap.get(library2));
-    checkEnableCheckbox(panel.getDetailsPanel().getEnableApiCheckbox(), true);
-
-    assertThat(panel.getApisToEnable()).isEmpty();
-  }
-
-  @Test
-  public void getManagementUI_withLibraryAndProjectUnselected_isDisabled() {
-    CloudLibrary library = LIBRARY_1.toCloudLibrary();
-
-    GoogleCloudApiSelectorPanel panel =
-        new GoogleCloudApiSelectorPanel(ImmutableList.of(library), testFixture.getProject());
-
-    panel
-        .getDetailsPanel()
-        .setCloudLibrary(library, BOM_VERSION, panel.getApiManagementMap().get(library));
-
-    assertThat(panel.getDetailsPanel().getEnableApiCheckbox().isEnabled()).isFalse();
-    assertThat(panel.getDetailsPanel().getManagementInfoPanel().isVisible()).isTrue();
-  }
-
-  @Test
-  public void getManagementUI_withLibraryAndProjectSelected_isEnabled() {
-    CloudLibrary library = LIBRARY_1.toCloudLibrary();
-
-    GoogleCloudApiSelectorPanel panel =
-        new GoogleCloudApiSelectorPanel(ImmutableList.of(library), testFixture.getProject());
-    JTable table = panel.getCloudLibrariesTable();
-
-    checkAddLibraryCheckbox(table, 0);
-    panel
-        .getDetailsPanel()
-        .setCloudLibrary(library, BOM_VERSION, panel.getApiManagementMap().get(library));
-
-    CloudProject cloudProject = CloudProject.create("name", "id", "user");
-    ProjectSelector projectSelector = panel.getProjectSelector();
-    projectSelector.setSelectedProject(cloudProject);
-    projectSelector
-        .getProjectSelectionListeners()
-        .forEach(listener -> listener.projectSelected(cloudProject));
-
-    assertThat(panel.getDetailsPanel().getEnableApiCheckbox().isEnabled()).isTrue();
-    assertThat(panel.getDetailsPanel().getManagementInfoPanel().isVisible()).isFalse();
-  }
-
-  @Test
-  public void getEnableCheckbox_withNoLibrarySelected_isNotSelected() {
-    CloudLibrary library = LIBRARY_1.toCloudLibrary();
-
-    GoogleCloudApiSelectorPanel panel =
-        new GoogleCloudApiSelectorPanel(ImmutableList.of(library), testFixture.getProject());
-
-    Map<CloudLibrary, CloudApiManagementSpec> apiManagementMap = panel.getApiManagementMap();
-    panel.getDetailsPanel().setCloudLibrary(library, BOM_VERSION, apiManagementMap.get(library));
-
-    assertThat(panel.getDetailsPanel().getEnableApiCheckbox().isSelected()).isFalse();
-  }
+  //  @Test
+  //  public void
+  //      getApisToEnable_withAllLibrariesChecked_AndNoShouldEnableChecked_returnsNoneEnabled() {
+  //    CloudLibrary library1 = LIBRARY_1.toCloudLibrary();
+  //    CloudLibrary library2 = LIBRARY_2.toCloudLibrary();
+  //
+  //    GoogleCloudApiSelectorPanel panel =
+  //        new GoogleCloudApiSelectorPanel(
+  //            ImmutableList.of(library1, library2), testFixture.getProject());
+  //    JTable table = panel.getCloudLibrariesTable();
+  //
+  //    checkAddLibraryCheckbox(table, 0);
+  //    checkAddLibraryCheckbox(table, 1);
+  //
+  //    Map<CloudLibrary, CloudApiManagementSpec> apiManagementMap = panel.getApiManagementMap();
+  //
+  //    panel.getDetailsPanel().setCloudLibrary(library1, BOM_VERSION,
+  // apiManagementMap.get(library1));
+  //    checkEnableCheckbox(panel.getDetailsPanel().getEnableApiCheckbox(), false);
+  //
+  //    panel.getDetailsPanel().setCloudLibrary(library2, BOM_VERSION,
+  // apiManagementMap.get(library2));
+  //    checkEnableCheckbox(panel.getDetailsPanel().getEnableApiCheckbox(), false);
+  //
+  //    assertThat(panel.getApisToEnable()).isEmpty();
+  //  }
+  //
+  //  @Test
+  //  public void
+  //      getApisToEnable_withAllLibrariesChecked_AndSomeShouldEnableChecked_returnsSomeEnabled() {
+  //    CloudLibrary library1 = LIBRARY_1.toCloudLibrary();
+  //    CloudLibrary library2 = LIBRARY_2.toCloudLibrary();
+  //
+  //    GoogleCloudApiSelectorPanel panel =
+  //        new GoogleCloudApiSelectorPanel(
+  //            ImmutableList.of(library1, library2), testFixture.getProject());
+  //    JTable table = panel.getCloudLibrariesTable();
+  //
+  //    checkAddLibraryCheckbox(table, 0);
+  //    checkAddLibraryCheckbox(table, 1);
+  //
+  //    Map<CloudLibrary, CloudApiManagementSpec> apiManagementMap = panel.getApiManagementMap();
+  //
+  //    panel.getDetailsPanel().setCloudLibrary(library1, BOM_VERSION,
+  // apiManagementMap.get(library1));
+  //    checkEnableCheckbox(panel.getDetailsPanel().getEnableApiCheckbox(), false);
+  //
+  //    panel.getDetailsPanel().setCloudLibrary(library2, BOM_VERSION,
+  // apiManagementMap.get(library2));
+  //    checkEnableCheckbox(panel.getDetailsPanel().getEnableApiCheckbox(), true);
+  //
+  //    assertThat(panel.getApisToEnable()).containsExactly(library2);
+  //  }
+  //
+  //  @Test
+  //  public void
+  //      getApisToEnable_withNoLibrariesChecked_AndAllShouldEnableChecked_returnsNoneEnabled() {
+  //    CloudLibrary library1 = LIBRARY_1.toCloudLibrary();
+  //    CloudLibrary library2 = LIBRARY_2.toCloudLibrary();
+  //
+  //    GoogleCloudApiSelectorPanel panel =
+  //        new GoogleCloudApiSelectorPanel(
+  //            ImmutableList.of(library1, library2), testFixture.getProject());
+  //
+  //    Map<CloudLibrary, CloudApiManagementSpec> apiManagementMap = panel.getApiManagementMap();
+  //
+  //    panel.getDetailsPanel().setCloudLibrary(library1, BOM_VERSION,
+  // apiManagementMap.get(library1));
+  //    checkEnableCheckbox(panel.getDetailsPanel().getEnableApiCheckbox(), true);
+  //
+  //    panel.getDetailsPanel().setCloudLibrary(library2, BOM_VERSION,
+  // apiManagementMap.get(library2));
+  //    checkEnableCheckbox(panel.getDetailsPanel().getEnableApiCheckbox(), true);
+  //
+  //    assertThat(panel.getApisToEnable()).isEmpty();
+  //  }
+  //
+  //  @Test
+  //  public void getManagementUI_withLibraryAndProjectUnselected_isDisabled() {
+  //    CloudLibrary library = LIBRARY_1.toCloudLibrary();
+  //
+  //    GoogleCloudApiSelectorPanel panel =
+  //        new GoogleCloudApiSelectorPanel(ImmutableList.of(library), testFixture.getProject());
+  //
+  //    panel
+  //        .getDetailsPanel()
+  //        .setCloudLibrary(library, BOM_VERSION, panel.getApiManagementMap().get(library));
+  //
+  //    assertThat(panel.getDetailsPanel().getEnableApiCheckbox().isEnabled()).isFalse();
+  //    assertThat(panel.getDetailsPanel().getManagementInfoPanel().isVisible()).isTrue();
+  //  }
+  //
+  //  @Test
+  //  public void getManagementUI_withLibraryAndProjectSelected_isEnabled() {
+  //    CloudLibrary library = LIBRARY_1.toCloudLibrary();
+  //
+  //    GoogleCloudApiSelectorPanel panel =
+  //        new GoogleCloudApiSelectorPanel(ImmutableList.of(library), testFixture.getProject());
+  //    JTable table = panel.getCloudLibrariesTable();
+  //
+  //    checkAddLibraryCheckbox(table, 0);
+  //    panel
+  //        .getDetailsPanel()
+  //        .setCloudLibrary(library, BOM_VERSION, panel.getApiManagementMap().get(library));
+  //
+  //    CloudProject cloudProject = CloudProject.create("name", "id", "user");
+  //    ProjectSelector projectSelector = panel.getProjectSelector();
+  //    projectSelector.setSelectedProject(cloudProject);
+  //    projectSelector
+  //        .getProjectSelectionListeners()
+  //        .forEach(listener -> listener.projectSelected(cloudProject));
+  //
+  //    assertThat(panel.getDetailsPanel().getEnableApiCheckbox().isEnabled()).isTrue();
+  //    assertThat(panel.getDetailsPanel().getManagementInfoPanel().isVisible()).isFalse();
+  //  }
+  //
+  //  @Test
+  //  public void getEnableCheckbox_withNoLibrarySelected_isNotSelected() {
+  //    CloudLibrary library = LIBRARY_1.toCloudLibrary();
+  //
+  //    GoogleCloudApiSelectorPanel panel =
+  //        new GoogleCloudApiSelectorPanel(ImmutableList.of(library), testFixture.getProject());
+  //
+  //    Map<CloudLibrary, CloudApiManagementSpec> apiManagementMap = panel.getApiManagementMap();
+  //    panel.getDetailsPanel().setCloudLibrary(library, BOM_VERSION,
+  // apiManagementMap.get(library));
+  //
+  //    assertThat(panel.getDetailsPanel().getEnableApiCheckbox().isSelected()).isFalse();
+  //  }
 
   /**
    * Forcibly checks the checkbox in the given {@link JTable} at the given row number.
@@ -835,26 +833,27 @@ public final class GoogleCloudApiSelectorPanelTest {
     assertThat(panel.getIcon().getIcon()).isNull();
   }
 
-  private void writeBomDependency(Module module, String bomVersion) {
-    MavenProject mavenProject =
-        MavenProjectsManager.getInstance(testFixture.getProject()).findProject(module);
-    MavenDomProjectModel model =
-        MavenDomUtil.getMavenDomProjectModel(testFixture.getProject(), mavenProject.getFile());
-
-    new WriteCommandAction(testFixture.getProject(), DomUtil.getFile(model)) {
-      @Override
-      protected void run(@NotNull Result result) {
-        MavenDomDependency bomDependency =
-            model.getDependencyManagement().getDependencies().addDependency();
-
-        bomDependency.getGroupId().setStringValue(CloudApiMavenService.GOOGLE_CLOUD_JAVA_BOM_GROUP);
-        bomDependency
-            .getArtifactId()
-            .setStringValue(CloudApiMavenService.GOOGLE_CLOUD_JAVA_BOM_ARTIFACT);
-        bomDependency.getVersion().setStringValue(bomVersion);
-      }
-    }.execute();
-  }
+  //  private void writeBomDependency(Module module, String bomVersion) {
+  //    MavenProject mavenProject =
+  //        MavenProjectsManager.getInstance(testFixture.getProject()).findProject(module);
+  //    MavenDomProjectModel model =
+  //        MavenDomUtil.getMavenDomProjectModel(testFixture.getProject(), mavenProject.getFile());
+  //
+  //    new WriteCommandAction(testFixture.getProject(), DomUtil.getFile(model)) {
+  //      @Override
+  //      protected void run(@NotNull Result result) {
+  //        MavenDomDependency bomDependency =
+  //            model.getDependencyManagement().getDependencies().addDependency();
+  //
+  //
+  // bomDependency.getGroupId().setStringValue(CloudApiMavenService.GOOGLE_CLOUD_JAVA_BOM_GROUP);
+  //        bomDependency
+  //            .getArtifactId()
+  //            .setStringValue(CloudApiMavenService.GOOGLE_CLOUD_JAVA_BOM_ARTIFACT);
+  //        bomDependency.getVersion().setStringValue(bomVersion);
+  //      }
+  //    }.execute();
+  //  }
 
   /**
    * Builds the map of expected URLs in the links text pane for the given {@link TestCloudLibrary}

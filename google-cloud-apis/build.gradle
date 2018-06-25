@@ -23,7 +23,6 @@ sourceSets.test.resources.srcDirs = ['testResources']
 
 dependencies {
     compile(project(':google-cloud-core'))
-    compile(project(':app-engine:java'))
     compile 'com.google.apis:google-api-services-servicemanagement:v1-rev374-1.22.0'
     compile ('com.google.cloud.tools:appengine-plugins-core:' + toolsLibVersion) {
         exclude group: 'com.google.guava', module: 'guava'

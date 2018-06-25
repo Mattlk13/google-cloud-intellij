@@ -17,11 +17,6 @@
 package com.google.cloud.tools.intellij.cloudapis;
 
 import com.google.cloud.tools.intellij.GoogleCloudCoreIcons;
-import com.google.cloud.tools.intellij.appengine.java.facet.standard.AppEngineStandardFacet;
-import com.google.cloud.tools.intellij.appengine.java.facet.standard.AppEngineStandardFacetType;
-import com.google.cloud.tools.intellij.appengine.java.project.AppEngineProjectService;
-import com.google.cloud.tools.intellij.appengine.java.project.MavenProjectService;
-import com.intellij.facet.FacetManager;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
@@ -29,7 +24,6 @@ import com.intellij.openapi.project.DumbAwareAction;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.apache.commons.lang3.JavaVersion;
 
 /**
  * The action in the Google Cloud Tools menu group that opens the wizard to add client libraries to
@@ -102,10 +96,12 @@ public final class AddCloudLibrariesAction extends DumbAwareAction {
       librariesDialog.show();
 
       if (librariesDialog.isOK()) {
-        CloudLibraryDependencyWriter.addLibraries(
-            librariesDialog.getSelectedLibraries(),
-            librariesDialog.getSelectedModule(),
-            librariesDialog.getSelectedBomVersion().orElse(null));
+        CloudApiUiExtensionServiceManager.getInstance()
+            .getCloudApiUiExtensionService()
+            .ifPresent(
+                uiExtensionService ->
+                    uiExtensionService.doUserConfirmedCloudLibraryAction(
+                        librariesDialog.getSelectedLibraries()));
       }
     }
   }
@@ -118,15 +114,16 @@ public final class AddCloudLibrariesAction extends DumbAwareAction {
 
   private CloudLibrariesModuleSupportType checkModuleForAddCloudLibraries(Module module) {
     // AppEngine Standard + Java 7 are not supported for GCP Libraries
-    if (AppEngineProjectService.getInstance().hasAppEngineStandardFacet(module)) {
-      AppEngineStandardFacet appEngineStandardFacet =
-          FacetManager.getInstance(module).getFacetByType(AppEngineStandardFacetType.ID);
-      if (!appEngineStandardFacet.getRuntimeJavaVersion().atLeast(JavaVersion.JAVA_1_8))
-        return CloudLibrariesModuleSupportType.APPENGINE_JAVA8_REQUIRED;
-    }
-
-    return MavenProjectService.getInstance().isMavenModule(module)
-        ? CloudLibrariesModuleSupportType.SUPPORTED
-        : CloudLibrariesModuleSupportType.MAVEN_REQUIRED;
+//    if (AppEngineProjectService.getInstance().hasAppEngineStandardFacet(module)) {
+//      AppEngineStandardFacet appEngineStandardFacet =
+//          FacetManager.getInstance(module).getFacetByType(AppEngineStandardFacetType.ID);
+//      if (!appEngineStandardFacet.getRuntimeJavaVersion().atLeast(JavaVersion.JAVA_1_8))
+//        return CloudLibrariesModuleSupportType.APPENGINE_JAVA8_REQUIRED;
+//    }
+//
+//    return MavenProjectService.getInstance().isMavenModule(module)
+//        ? CloudLibrariesModuleSupportType.SUPPORTED
+//        : CloudLibrariesModuleSupportType.MAVEN_REQUIRED;
+    return CloudLibrariesModuleSupportType.SUPPORTED;
   }
 }

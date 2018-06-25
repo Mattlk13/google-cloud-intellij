@@ -17,6 +17,7 @@
 package com.google.cloud.tools.intellij.cloudapis;
 
 import com.google.cloud.tools.intellij.cloudapis.CloudApiUiExtensionService.EXTENSION_COMPONENT_LOCATION;
+import com.google.cloud.tools.libraries.json.CloudLibrary;
 import com.intellij.application.options.ModulesComboBox;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.project.Project;
@@ -28,9 +29,20 @@ import javax.swing.JLabel;
 public class CloudApiUiExtensionServiceManager
     implements CloudApiUiExtensionService.CloudApiUiPresenter {
   private EnumMap<EXTENSION_COMPONENT_LOCATION, JComponent> extensionComponentMap;
+  private GoogleCloudApiSelectorPanel selectorPanel;
+  private Project project;
 
   static CloudApiUiExtensionServiceManager getInstance() {
     return ServiceManager.getService(CloudApiUiExtensionServiceManager.class);
+  }
+
+  void init(Project project, GoogleCloudApiSelectorPanel selectorPanel) {
+    this.project = project;
+    this.selectorPanel = selectorPanel;
+
+    // pass a link to core UI presenter for cloud APIs
+    getCloudApiUiExtensionService()
+        .ifPresent(uiExtensionService -> uiExtensionService.setCloudApiUiPresenter(this));
   }
 
   Optional<CloudApiUiExtensionService> getCloudApiUiExtensionService() {
@@ -50,16 +62,21 @@ public class CloudApiUiExtensionServiceManager
 
   @Override
   public Project getProject() {
-    return null;
+    return project;
+  }
+
+  @Override
+  public Optional<CloudLibrary> getSelectedLibrary() {
+    return selectorPanel.getCurrentCloudLibrary();
   }
 
   @Override
   public ModulesComboBox getModulesComboBox() {
-    return null;
+    return selectorPanel.getModulesComboBox();
   }
 
   @Override
   public JLabel getVersionLabel() {
-    return null;
+    return selectorPanel.getVersionLabel();
   }
 }

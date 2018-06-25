@@ -75,8 +75,7 @@ public final class GoogleCloudApiDetailsPanel {
    *
    * @param library the {@link CloudLibrary} to display
    */
-  void setCloudLibrary(
-      CloudLibrary library, CloudApiManagementSpec cloudApiManagementSpec) {
+  void setCloudLibrary(CloudLibrary library, CloudApiManagementSpec cloudApiManagementSpec) {
     if (cloudLibrariesEqual(currentCloudLibrary, library)) {
       return;
     }
@@ -144,6 +143,10 @@ public final class GoogleCloudApiDetailsPanel {
   @VisibleForTesting
   JPanel getManagementInfoPanel() {
     return managementInfoPanel;
+  }
+
+  CloudLibrary getCurrentCloudLibrary() {
+    return currentCloudLibrary;
   }
 
   /**
