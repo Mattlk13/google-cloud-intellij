@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package com.google.cloud.tools.intellij.cloudapis;
+package com.google.cloud.tools.intellij.cloudapis.java;
 
 import com.google.cloud.tools.intellij.GoogleCloudCoreIcons;
-import com.google.cloud.tools.intellij.cloudapis.CloudApiMavenService.LibraryVersionFromBomException;
+import com.google.cloud.tools.intellij.cloudapis.GoogleCloudApisMessageBundle;
+import com.google.cloud.tools.intellij.cloudapis.java.CloudApiMavenService.LibraryVersionFromBomException;
 import com.google.cloud.tools.intellij.util.ThreadUtil;
 import com.google.cloud.tools.libraries.json.CloudLibraryClientMavenCoordinates;
 import com.google.common.collect.Lists;
@@ -45,7 +46,7 @@ class BomComboBox extends JComboBox<String> {
     setRenderer(new BomVersionRenderer());
   }
 
-  void init(Project project, ModulesComboBox modulesComboBox, JLabel versionLabel) {
+  void init(Project project, ModulesComboBox modulesComboBox) {
     this.project = project;
     this.modulesComboBox = modulesComboBox;
     this.versionLabel = versionLabel;

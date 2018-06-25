@@ -18,6 +18,7 @@ package com.google.cloud.tools.intellij.cloudapis;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.google.cloud.tools.intellij.cloudapis.java.CloudLibraryDependencyWriter;
 import com.google.cloud.tools.intellij.testing.CloudToolsRule;
 import com.google.cloud.tools.intellij.testing.MavenTestUtils;
 import com.google.cloud.tools.intellij.testing.TestFixture;

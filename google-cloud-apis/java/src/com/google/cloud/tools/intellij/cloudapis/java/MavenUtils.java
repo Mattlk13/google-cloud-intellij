@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.cloud.tools.intellij.cloudapis;
+package com.google.cloud.tools.intellij.cloudapis.java;
 
 import com.google.cloud.tools.libraries.json.CloudLibraryClientMavenCoordinates;
 import java.util.List;

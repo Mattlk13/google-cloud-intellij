@@ -16,6 +16,7 @@
 
 package com.google.cloud.tools.intellij.cloudapis;
 
+import com.google.cloud.tools.intellij.cloudapis.CloudApiUiExtensionService.EXTENSION_COMPONENT_LOCATION;
 import com.google.cloud.tools.intellij.project.CloudProject;
 import com.google.cloud.tools.intellij.project.ProjectSelector;
 import com.google.cloud.tools.libraries.json.CloudLibrary;
@@ -41,17 +42,17 @@ import java.awt.Graphics;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTable;
@@ -77,8 +78,8 @@ final class GoogleCloudApiSelectorPanel {
   private JLabel modulesLabel;
   private ModulesComboBox modulesComboBox;
   private ProjectSelector projectSelector;
-  private JComboBox<String> bomComboBox;
-  private JLabel bomSelectorLabel;
+  private JPanel bottomComponent1;
+  private JPanel bottomComponent2;
 
   private final Map<CloudLibrary, CloudApiManagementSpec> apiManagementMap;
   private final List<CloudLibrary> libraries;
@@ -131,11 +132,6 @@ final class GoogleCloudApiSelectorPanel {
     return ((CloudLibraryTableModel) cloudLibrariesTable.getModel()).getSelectedLibraries();
   }
 
-  /** Returns, optionally, the selected BOM version. */
-  Optional<String> getSelectedBomVersion() {
-    return Optional.ofNullable(bomComboBox.getSelectedItem()).map(Object::toString);
-  }
-
   CloudProject getCloudProject() {
     return projectSelector.getSelectedProject();
   }
@@ -184,16 +180,6 @@ final class GoogleCloudApiSelectorPanel {
     return projectSelector;
   }
 
-  @VisibleForTesting
-  public JLabel getBomSelectorLabel() {
-    return bomSelectorLabel;
-  }
-
-  @VisibleForTesting
-  public JComboBox<String> getBomComboBox() {
-    return bomComboBox;
-  }
-
   /**
    * Initializes some UI components in this panel that require special set-up.
    *
@@ -222,6 +208,19 @@ final class GoogleCloudApiSelectorPanel {
 
     projectSelector = new ProjectSelector(project);
     projectSelector.addProjectSelectionListener(cloudProject -> updateManagementUI());
+
+    // insert extension UI components if present.
+    // build insert parent component map.
+    EnumMap<EXTENSION_COMPONENT_LOCATION,JComponent> insertLocations = new EnumMap<>(
+        EXTENSION_COMPONENT_LOCATION.class);
+    insertLocations.put(EXTENSION_COMPONENT_LOCATION.BOTTOM_LINE_1, bottomComponent1);
+    insertLocations.put(EXTENSION_COMPONENT_LOCATION.BOTTOM_LINE_2, bottomComponent2);
+    // for all present components, insert them.
+    for (EXTENSION_COMPONENT_LOCATION nextLocation: insertLocations.keySet()) {
+      CloudApiUiExtensionServiceManager.getInstance()
+          .getComponentAt(nextLocation)
+          .ifPresent(comp -> insertLocations.get(nextLocation).add(comp));
+    }
   }
 
   private void onClientLibrarySelection(ListSelectionEvent event) {
@@ -231,10 +230,7 @@ final class GoogleCloudApiSelectorPanel {
       CloudLibrary library =
           (CloudLibrary)
               cloudLibrariesTable.getModel().getValueAt(selectedIndex, CLOUD_LIBRARY_COL);
-      detailsPanel.setCloudLibrary(
-          library,
-          bomComboBox.getSelectedItem() != null ? bomComboBox.getSelectedItem().toString() : null,
-          apiManagementMap.get(library));
+      detailsPanel.setCloudLibrary(library, apiManagementMap.get(library));
       updateManagementUI();
     }
   }
@@ -247,7 +243,6 @@ final class GoogleCloudApiSelectorPanel {
                 model.getValueAt(cloudLibrariesTable.getSelectedRow(), CLOUD_LIBRARY_SELECT_COL);
     detailsPanel.setManagementUIEnabled(addLibrary && projectSelector.getSelectedProject() != null);
   }
-
 
   /** The custom {@link JBTable} for the table of supported Cloud libraries. */
   private static final class CloudLibraryTable extends JBTable {
@@ -377,5 +372,4 @@ final class GoogleCloudApiSelectorPanel {
       listeners.remove(l);
     }
   }
-
 }

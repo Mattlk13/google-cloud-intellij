@@ -16,25 +16,34 @@
 
 package com.google.cloud.tools.intellij.cloudapis;
 
+import com.google.cloud.tools.libraries.json.CloudLibrary;
 import com.intellij.application.options.ModulesComboBox;
-import com.intellij.openapi.extensions.ExtensionPointName;
 import com.intellij.openapi.project.Project;
-import java.util.Set;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Optional;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 
-public interface CloudApiUiExtensionProvider {
-  ExtensionPointName<CloudApiUiExtensionProvider> EP_NAME =
-      new ExtensionPointName<>("com.google.gct.cloudapis.cloudApiUiExtension");
+public interface CloudApiUiExtensionService {
+  enum EXTENSION_COMPONENT_LOCATION {
+    TOP_LINE_1,
+    TOP_LINE_2,
+    BOTTOM_LINE_1,
+    BOTTOM_LINE_2
+  }
 
-  Set<JComponent> createAdditionalCloudApiComponents();
+  EnumMap<EXTENSION_COMPONENT_LOCATION, JComponent> createAdditionalCloudApiComponents();
 
-  void setCloudApiComponents(Project project, ModulesComboBox moduleComboBox, JLabel versionLabel);
+  void setCloudApiUiPresenter(CloudApiUiPresenter cloudApiUiPresenter);
 
-  interface BaseCloudApiUiState {
+  List<Optional<String>> onCloudLibrarySelectionChange(CloudLibrary currentCloudLibrary);
+
+  interface CloudApiUiPresenter {
     Project getProject();
-    ModulesComboBox getModulesComboBox();
-    JLabel getVersionLabel();
 
+    ModulesComboBox getModulesComboBox();
+
+    JLabel getVersionLabel();
   }
 }

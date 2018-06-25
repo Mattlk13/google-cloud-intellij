@@ -20,9 +20,7 @@ import com.google.cloud.tools.intellij.GoogleCloudCoreIcons;
 import com.google.cloud.tools.intellij.ui.BrowserOpeningHyperLinkListener;
 import com.google.cloud.tools.intellij.util.ThreadUtil;
 import com.google.cloud.tools.libraries.json.CloudLibrary;
-import com.google.cloud.tools.libraries.json.CloudLibraryClientMavenCoordinates;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableList;
 import com.intellij.icons.AllIcons.General;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ModalityState;
@@ -31,11 +29,13 @@ import com.intellij.util.SVGLoader;
 import java.awt.Image;
 import java.io.IOException;
 import java.net.URL;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.swing.ImageIcon;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
@@ -60,7 +60,6 @@ public final class GoogleCloudApiDetailsPanel {
   private JLabel warningLabel;
 
   private CloudLibrary currentCloudLibrary;
-  private String currentBomVersion;
   private CloudApiManagementSpec currentCloudApiManagementSpec;
 
   /** Returns the {@link JPanel} that holds the UI elements in this panel. */
@@ -77,13 +76,12 @@ public final class GoogleCloudApiDetailsPanel {
    * @param library the {@link CloudLibrary} to display
    */
   void setCloudLibrary(
-      CloudLibrary library, String bomVersion, CloudApiManagementSpec cloudApiManagementSpec) {
+      CloudLibrary library, CloudApiManagementSpec cloudApiManagementSpec) {
     if (cloudLibrariesEqual(currentCloudLibrary, library)) {
       return;
     }
 
     currentCloudLibrary = library;
-    currentBomVersion = bomVersion;
     currentCloudApiManagementSpec = cloudApiManagementSpec;
     updateUI();
   }
@@ -198,35 +196,21 @@ public final class GoogleCloudApiDetailsPanel {
     descriptionTextPane.setSize(
         descriptionTextPane.getWidth(), descriptionTextPane.getPreferredSize().height);
 
-    if (currentCloudLibrary.getClients() != null) {
-      CloudLibraryUtils.getFirstJavaClient(currentCloudLibrary)
-          .ifPresent(
-              client -> {
-                if (currentBomVersion != null) {
-                  updateManagedLibraryVersionFromBom(currentBomVersion);
-                } else {
-                  if (client.getMavenCoordinates() != null) {
-                    versionLabel.setText(
-                        GoogleCloudApisMessageBundle.message(
-                            "cloud.libraries.version.label",
-                            client.getMavenCoordinates().getVersion()));
-                  }
-                }
+    Optional<String> docsLink =
+        makeLink("cloud.libraries.documentation.link", currentCloudLibrary.getDocumentation());
 
-                Optional<String> docsLink =
-                    makeLink(
-                        "cloud.libraries.documentation.link",
-                        currentCloudLibrary.getDocumentation());
-                Optional<String> sourceLink =
-                    makeLink("cloud.libraries.source.link", client.getSource());
-                Optional<String> apiReferenceLink =
-                    makeLink("cloud.libraries.apireference.link", client.getApiReference());
+    List<Optional<String>> additionalLinks =
+        CloudApiUiExtensionServiceManager.getInstance()
+            .getCloudApiUiExtensionService()
+            .map(
+                uiExtensionService ->
+                    uiExtensionService.onCloudLibrarySelectionChange(currentCloudLibrary))
+            .orElse(Collections.emptyList());
 
-                List<Optional<String>> links =
-                    ImmutableList.of(docsLink, sourceLink, apiReferenceLink);
-                linksTextPane.setText(joinLinks(links));
-              });
-    }
+    linksTextPane.setText(
+        joinLinks(
+            Stream.concat(Stream.of(docsLink), additionalLinks.stream())
+                .collect(Collectors.toList())));
 
     managementWarningTextPane.setText(
         GoogleCloudApisMessageBundle.message("cloud.apis.management.section.info.text"));
@@ -280,7 +264,7 @@ public final class GoogleCloudApiDetailsPanel {
    * @param url the URL to make into an HTML link
    * @return the HTML-formatted link, or {@link Optional#empty()} if the given URL is {@code null}
    */
-  private static Optional<String> makeLink(String key, @Nullable String url) {
+  public static Optional<String> makeLink(String key, @Nullable String url) {
     if (url == null) {
       return Optional.empty();
     }
