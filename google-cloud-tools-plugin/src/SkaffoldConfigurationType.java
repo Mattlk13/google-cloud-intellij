@@ -27,8 +27,10 @@ public class SkaffoldConfigurationType implements ConfigurationType {
 
   private static final String ID = "gct-skaffold-run-config";
 
-  private SkaffoldConfigurationFactory skaffoldConfigurationFactory =
-      new SkaffoldConfigurationFactory(this);
+  private SkaffoldRunConfigurationFactory skaffoldRunConfigurationFactory =
+      new SkaffoldRunConfigurationFactory(this);
+  private SkaffoldDevConfigurationFactory skaffoldDevConfigurationFactory =
+      new SkaffoldDevConfigurationFactory(this);
 
   @Nls
   @Override
@@ -55,19 +57,44 @@ public class SkaffoldConfigurationType implements ConfigurationType {
 
   @Override
   public ConfigurationFactory[] getConfigurationFactories() {
-    return new ConfigurationFactory[] {skaffoldConfigurationFactory};
+    return new ConfigurationFactory[] {skaffoldRunConfigurationFactory, skaffoldDevConfigurationFactory};
   }
 
-  private static class SkaffoldConfigurationFactory extends ConfigurationFactory {
+  private static class SkaffoldRunConfigurationFactory extends ConfigurationFactory {
 
-    SkaffoldConfigurationFactory(@NotNull ConfigurationType type) {
+    SkaffoldRunConfigurationFactory(@NotNull ConfigurationType type) {
       super(type);
     }
 
     @NotNull
     @Override
     public RunConfiguration createTemplateConfiguration(@NotNull Project project) {
-      return new SkaffoldRunConfiguration(project, this, "Skaffold Run");
+      return new SkaffoldRunConfiguration(project, this, "Skaffold Single Run");
+    }
+
+    @Nls
+    @Override
+    public String getName() {
+      return "Skaffold Single Run";
+    }
+  }
+
+  private static class SkaffoldDevConfigurationFactory extends ConfigurationFactory {
+
+    SkaffoldDevConfigurationFactory(@NotNull ConfigurationType type) {
+      super(type);
+    }
+
+    @NotNull
+    @Override
+    public RunConfiguration createTemplateConfiguration(@NotNull Project project) {
+      return new SkaffoldRunConfiguration(project, this, "Skaffold Continuous");
+    }
+
+    @Nls
+    @Override
+    public String getName() {
+      return "Skaffold Continuous";
     }
   }
 }

@@ -21,25 +21,25 @@ import com.intellij.execution.configurations.ConfigurationFactory;
 import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.execution.configurations.RunConfigurationBase;
 import com.intellij.execution.configurations.RunProfileState;
-import com.intellij.execution.configurations.SearchScopeProvider;
-import com.intellij.execution.filters.TextConsoleBuilder;
-import com.intellij.execution.filters.TextConsoleBuilderFactory;
-import com.intellij.execution.process.OSProcessHandler;
+import com.intellij.execution.process.KillableProcessHandler;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.ui.ConsoleView;
-import com.intellij.execution.ui.ConsoleViewContentType;
+import com.intellij.icons.AllIcons.General;
+import com.intellij.openapi.actionSystem.AnAction;
+import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.module.Module;
+import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.project.Project;
-import com.intellij.psi.search.GlobalSearchScope;
 import java.io.File;
 import java.util.Map;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JRadioButton;
 import javax.swing.JSeparator;
 import javax.swing.SwingConstants;
 import net.miginfocom.swing.MigLayout;
@@ -76,9 +76,9 @@ public class SkaffoldRunConfiguration extends RunConfigurationBase {
         jPanel.add(new JLabel("Deployment Settings"), "gaptop 12, split 2, span 3");
         jPanel.add(new JSeparator(SwingConstants.HORIZONTAL), "gaptop 12, growx, wrap");
         jPanel.add(
-            new JRadioButton("Deploy continuously on each project build", true),
+            new JCheckBox("Stream resulting deployment logs into console", true),
             "gapleft 20, span 2, wrap");
-        jPanel.add(new JRadioButton("Deploy once", false), "gapleft 20, span 2, wrap");
+
 
         return jPanel;
       }
@@ -97,6 +97,20 @@ public class SkaffoldRunConfiguration extends RunConfigurationBase {
 
     private SkaffoldCommandLineRunState(ExecutionEnvironment environment) {
       super(environment);
+
+        environment.getProject().getBaseDir();
+    }
+
+    @NotNull
+    @Override
+    protected AnAction[] createActions(ConsoleView console, ProcessHandler processHandler,
+        Executor executor) {
+      AnAction[] parentActions = super.createActions(console, processHandler, executor);
+      AnAction[] extendedActions = new AnAction[parentActions.length + 1];
+      System.arraycopy(parentActions, 0, extendedActions, 0, parentActions.length);
+      extendedActions[extendedActions.length -1] = new DeleteSkaffoldAction();
+
+      return extendedActions;
     }
 
     @NotNull
@@ -111,17 +125,28 @@ public class SkaffoldRunConfiguration extends RunConfigurationBase {
         Process process = processBuilder.directory(projectDir).command(commandLine).start();
 
         // another console or the same one?
-        final GlobalSearchScope searchScope = SearchScopeProvider
+        /*final GlobalSearchScope searchScope = SearchScopeProvider
             .createSearchScope(getEnvironment().getProject(), getEnvironment().getRunProfile());
         TextConsoleBuilder customConsole = TextConsoleBuilderFactory.getInstance().createBuilder(getEnvironment().getProject(), searchScope);
         ConsoleView view = customConsole.getConsole();
-        view.print("This is another console!", ConsoleViewContentType.NORMAL_OUTPUT);
+        view.print("This is another console!", ConsoleViewContentType.NORMAL_OUTPUT);*/
         // getConsoleBuilder().getConsole().print("Hello from the same console here!", ConsoleViewContentType.NORMAL_OUTPUT);
 
-        return new OSProcessHandler(process, String.join(" ", commandLine));
+        return new KillableProcessHandler(process, String.join(" ", commandLine));
       } catch (Exception ex) {
         throw new ExecutionException(ex);
       }
     }
+
+    class DeleteSkaffoldAction extends AnAction {
+      DeleteSkaffoldAction() {
+        super("Delete Skaffold Deployment", "", General.BalloonError);
+      }
+      @Override
+      public void actionPerformed(AnActionEvent e) {
+        System.out.println("skaffold delete!");
+      }
+    }
+
   }
 }
