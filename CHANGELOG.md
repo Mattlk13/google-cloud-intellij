@@ -1,7 +1,405 @@
 # Release notes
 This page documents production updates to Cloud Code for IntelliJ. You can check this page for announcements about new or updated features, bug fixes, known issues, and deprecated functionality.
 
-## 20.1.3 - Latest Release
+## Version 21.6.1
+
+### New Features
+- **Skaffold profile creation**: Create new Skaffold profiles from within your IDE. This feature is particularly useful if you’re using an M1 Mac and would like to deploy to a GKE cluster; create a profile with a “Cloud Build” build environment to build and deploy from your machine with the confidence that your images will work in an x86 cluster.
+
+  ![Profile Creation Button](docs/images/release-notes/create-profile-hover.png)
+
+  ![Profile Creation Dialog](docs/images/release-notes/create-profile-dialog.png)
+
+- **Skaffold profile filtering**: Users can now filter for Skaffold profiles with a particular build environment. If you have profiles using multiple build environments, you can easily find all the profiles that use a particular build environment. This feature is particularly useful if you want to build your images locally during development but in-cluster or via Google Cloud Build for production.
+
+  ![Profile Filter](docs/images/release-notes/profile-filter.png)
+
+- **Artifact Registry Support**: Now automatically authenticates artifact registry repository urls when uploading container images.
+
+### Updates
+- **Simplified creation of Kubernetes sample application**: Removed the image repository prompt that was previously displayed to users in the New Project wizard when creating a Kubernetes sample application.
+
+### Bug Fixes
+- Fixed a bug where prompts to install the appropriate language plugin for a selected sample app weren’t displayed when creating a new sample-based project (e.g. the Flask Kubernetes Hello World sample now prompts you to install the python plugin).
+
+## Version 21.5.1
+
+### New Features
+- **Python Debugging**: You can now debug your Python applications running on Kubernetes and in the local Cloud Run emulator! Set breakpoints and step through your code. No more debugging via logs or having to manually configure remote debugging.
+
+  ![Python debugging](docs/images/release-notes/python-debugging.png)
+
+### Updates
+- Adds a progress indicator while attempting to bootstrap a project for Kubernetes support.
+- Modularize pieces of our managed Cloud SDK installation for faster dependency installs.
+- Cloud Run deployment settings no longer disable the local build option on ARM architectures to allow selection of supported builders (e.g. Jib, for Java applications).
+- Updated our Plugin Marketplace text with more relevant and helpful information.
+
+### Bug Fixes
+- Fixed various exceptions occurring during Skaffold schema upgrade checks.
+- Fixed a bug where the “Build Settings” pane under the “Build / Deploy” tab in the Kubernetes run configuration doesn’t properly refresh itself.
+- Fixed a TimeoutException occurring during the editor `kubectl apply` gutter action. [#2894](https://github.com/GoogleCloudPlatform/cloud-code-intellij/issues/2894)
+
+## Version 21.4.1
+
+**Note**: This is the final release that contains Cloud Code updates for IntelliJ version 2020.1. Starting next release Cloud Code will support versions 2020.2 and above. See our [version support policy](https://cloud.google.com/code/docs/intellij/version-support) for more details.
+
+### New Features
+- **Kubernetes deployment to managed minikube**: Cloud Code now provides a separate option to always deploy locally to minikube. Cloud Code will manage minikube, installing and starting it, or re-using your existing minikube cluster, and starting or un-pausing minikube before each deployment as needed.
+
+  ![minikube for Kubernetes](docs/images/release-notes/k8s-minikube.png)
+
+- **Cloud Run support for Cloud Build and messaging for M1 Mac users**: For Cloud Run deployments, users can now choose between building their images on Cloud Build or locally. For M1 Mac users the option to build images for Cloud Run locally is disabled because Cloud Run is currently only able to run x86_64 images. Note: we haven't yet updated our docs to reflect these changes as we're looking at surfacing ARM specific docs in a clearer manner, please stay tuned (and follow [#2891](https://github.com/GoogleCloudPlatform/cloud-code-intellij/issues/2891) for ARM related updates).
+
+  ![Cloud Build in Cloud Run](docs/images/release-notes/cloud-build-in-cloud-run.png)
+
+- **Kubernetes deployment compatibility checks**: On the Kubernetes run configuration panel, Cloud Code makes a best-effort attempt to notify users if the cluster they’ve targeted for deployment has any incompatibilities with the environment in which they plan to build the image(s) being deployed (e.g. locally, Cloud Build, or in-cluster).
+
+  ![K8s Compatibility Warning](docs/images/release-notes/k8s-compatibility-warning.png)
+
+- **New contextual actions in Kubernetes Explorer**: Create and deploy Kubernetes sample applications, bootstrap and run an existing Kubernetes application, open help resources.
+
+  ![Kubernetes actions](docs/images/release-notes/k8s-context-actions.png)
+
+- **New contextual actions in Cloud Run tool window**: Create and deploy a new Cloud Run sample application, bootstrap currently open projects for local Cloud Run development, open help resources.
+
+  ![Cloud Run actions](docs/images/release-notes/cr-context-actions.png)
+
+- **New right click action in the explorer**: Remove a cluster and its associated contexts from the kubeconfig
+
+  ![Remove cluster](docs/images/release-notes/remove-cluster.png)
+
+### Updates
+
+- **Updated Kubernetes run configuration UI**: It now matches IDE guidelines and improves usability.
+
+  ![K8s Run Config UI Guidelines](docs/images/release-notes/k8s-run-config-ui-guidelines.png)
+
+- **Multiple improvements for Cloud Run tool window**: Show a region next to a service name, more friendly prompts when no services exist yet or Cloud Run API is not enabled.
+- **Cloud API improvements**: See all available API categories expanded by default for easier browsing and searching. Hyperlinks to libraries and documentation now show tooltips with their URLs.
+- **Custom Samples Rebranding**: Custom Templates have been rebranded to Custom Samples. We currently do not support custom application templating, but will consider adding the functionality in the future based on feedback.
+- **Dynamic Plugin**: Cloud Code is dynamic starting with IDE version 2021.1 and no longer requires IDE restart to be installed or updated.
+
+### Bug Fixes
+
+- Copying Kubernetes resource names using a keyboard shortcut now works properly for Kubernetes Explorer [#2898](https://github.com/GoogleCloudPlatform/cloud-code-intellij/issues/2898)
+- Fixed a frequent InvocationTargetException IDE error thrown in 2021.1 [#2889](https://github.com/GoogleCloudPlatform/cloud-code-intellij/issues/2889)
+
+## Version 21.3.1
+
+### New Features
+- **Initial support for M1-based Apple Silicon Macs**: With this update, you can now build and work locally on your M1 Mac with Cloud Code, minikube, and Skaffold for ARM64 targets. Please note that [Rosetta 2](https://support.apple.com/en-us/HT211861) is currently required as several dependencies are still x86/64 only, refer to [instructions](https://cloud.google.com/code/docs/intellij/arm). Follow this [GitHub issue](https://github.com/GoogleCloudPlatform/cloud-code-intellij/issues/2891) for more information and to track the latest updates.
+- **New Secret Manager Actions**: Secret Manager now comes with more actions, such as enabling, disabling, and destroying secret versions, giving you greater flexibility to manage secrets within your IDE. Within the Secret Manager panel, under the Versions tab, right-click any secret version to access these actions. For a detailed look, see the [Managing secrets guide](https://cloud.google.com/code/docs/intellij/secret-manager).
+
+  ![Secret delete](docs/images/release-notes/secret-delete.png)
+  ![Secret enable](docs/images/release-notes/secret-enable.png)
+
+### Updates
+- Reorganized the Cloud Code settings panel to be more intuitive. All CLI dependencies required for Cloud Code can now be found in the Tools > Cloud Code > Dependencies settings panel.
+
+  ![Settings panel](docs/images/release-notes/new-dependencies.png)
+- Added support for specifying a VPC Connector when deploying to Cloud Run (fully managed). [#2885](https://github.com/GoogleCloudPlatform/cloud-code-intellij/issues/2885)
+- Added actions for viewing documentation and creating new sample applications to the Kubernetes and Cloud Run explorers.
+
+  ![Cloud Run actions](docs/images/release-notes/cloud-run-actions.png)
+  ![Kubernetes actions](docs/images/release-notes/kubernetes-actions.png)
+
+### Bug Fixes
+- Fixed a crash that could occur when listing Secret Manager secrets. [#2882](https://github.com/GoogleCloudPlatform/cloud-code-intellij/issues/2882)
+- Fixed crashes that could occur when using the Cloud Run local emulator. [#2852](https://github.com/GoogleCloudPlatform/cloud-code-intellij/issues/2852), [#2830](https://github.com/GoogleCloudPlatform/cloud-code-intellij/issues/2830)
+- Fixed timeout errors when trying to view Cloud Run services with the API not enabled. [#2851](https://github.com/GoogleCloudPlatform/cloud-code-intellij/issues/2851)
+- Fixed a crash that could occur when trying to use Custom Templates with invalid certificates. [#2902](https://github.com/GoogleCloudPlatform/cloud-code-intellij/issues/2902)
+
+## Version 21.2.3 
+
+**Note:** This is the last release containing Cloud Code updates for IntelliJ version 2019.3. Starting next release Cloud Code will support versions 2020.1 and up. See our [version support policy](https://cloud.google.com/code/docs/intellij/version-support) for more details.
+
+### New Features
+- **GKE Autopilot**: You can now deploy your application to GKE Autopilot right from IntelliJ Cloud Code configurations. GKE Autopilot is a new mode of operation of GKE clusters where infrastructure is auto managed by Google, provides auto provisioning and auto scaling of GKE infra to the end user. Overview of [GKE Autopilot](https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-overview).
+- **Kubernetes YAML Gutter Actions**: Support for dry runs on the client and server, directly applying yaml files, and viewing the differences between a YAML file in source control and a deployed YAML file.
+
+  ![kubernetes-yaml-gutter-actions](docs/images/release-notes/kubernetes-yaml-gutter-actions.png)
+
+### Updates
+- Added a link to the Google Cloud Storage console browser from the side panel explorer. Please comment on [#2802](https://github.com/GoogleCloudPlatform/cloud-code-intellij/issues/2802) if you would like additional enhancements to this feature.
+
+### Fixes
+- Fixed a bug where Kubernetes sessions were not automatically terminated on error, requiring the user to click the stop button. [#2837](https://github.com/GoogleCloudPlatform/cloud-code-intellij/issues/2837)
+- Fixed a crash during base64 decoding of secrets. [#2846](https://github.com/GoogleCloudPlatform/cloud-code-intellij/issues/2846)
+
+## Version 21.2.2 (EAP only)
+
+### Fixes
+- [Issue #2880](https://github.com/GoogleCloudPlatform/cloud-code-intellij/issues/2880) Fixed bug that caused Cloud Code to crash when starting on 2021.1 EAP
+
+## Version 21.2.1
+
+### New Features
+- **Custom templates:** You can now create applications from custom templates! Cloud Code offers the option of importing a Git template repository so that teams can get started quickly from a standard set of starter applications, services, and infrastructure configuration best suited to your technical stack and organizational policies. To add a custom template, go to **Settings** > **Cloud Code**. To read more about custom templates and how to set them up, head over to the [setting up a template repository](https://cloud.google.com/code/docs/intellij/set-up-template-repo) guide.
+
+  ![custom-templates](docs/images/release-notes/custom-templates-new-project.png)
+
+  ![custom-templates](docs/images/release-notes/custom-templates-settings.png)
+
+### Updates
+- **Support for 2021.1 EAP:** Cloud Code now supports the latest Early Access Preview (EAP)! Please file any issues you encounter on our [GitHub repository](https://github.com/GoogleCloudPlatform/cloud-code-intellij/issues/new).
+
+- **New sample application READMEs:** When you create a new sample application with Cloud Code, the new README gives updated guidance on next steps to help you get more out of Cloud Code.
+
+- **Cloud Run:** Cloud Run managed deploys now support an 8 GiB memory option for any deployments with at least 2 CPUs allocated. This option is available in Cloud Run managed run configurations under **Advanced revision settings** > **Memory allocated**.
+
+  ![cloud-run-memory-options](docs/images/release-notes/cloud-run-memory-options.png)
+
+### Fixes
+- [Issue #2872](https://github.com/GoogleCloudPlatform/cloud-code-intellij/issues/2872) Fixed bug requiring a Dockerfile when running a Cloud Run application locally with a buildpacks build.
+- Fixed bug where user images in project selector were no longer being displayed.
+- Cloud SDK progress dialog now defaults to the background instead of a modal when the IDE starts.
+
+## Version 21.1.1
+
+### New Features
+- **Kubernetes Deployment Status Check:** This new flag allows you to control health checks performed by Skaffold for Kubernetes deployments. You can now skip health status checks for deployed Kubernetes resources when you don't need Cloud Code to wait for deployments to stabilize.
+
+  ![k8s-deploy-status-check](docs/images/release-notes/k8s-deploy-status-check.png)
+
+## Version 20.12.2
+
+### New Features
+- **Cloud Code Terminal:** Allows you to access Cloud Code managed dependencies such as the Cloud SDK (gcloud), minikube, and skaffold via the IDE's built in terminal. Launch it via the Tools menu under **Cloud Code > Tools > Cloud Code Terminal**.
+
+    ![cloud-code-terminal](docs/images/release-notes/cloud-code-terminal.png)
+
+### Updates
+- Auto-populate Cloud Run service region list using `gcloud run regions list`. This ensures that users will never see an out-of-date list of available Cloud Run service regions.
+- Improve spacing in Cloud Run service details panel. The “Property” column was taking up more space than necessary.
+- Added support for network proxies when installing managed Cloud SDK. To configure proxies, use IDE Preferences | Appearance & Behavior | System Settings | HTTP Proxy settings.
+
+### Fixes
+- [Issue #2818](https://github.com/GoogleCloudPlatform/cloud-code-intellij/issues/2818), [Issue #2853](https://github.com/GoogleCloudPlatform/cloud-code-intellij/issues/2853): Fixed an issue where Dockerfiles were not found during a Cloud Run Local run when they were not located in the root directory of a project.
+- [Issue #3062](https://github.com/GoogleCloudPlatform/cloud-code-intellij/issues/3062): Fixed an issue where Cloud Run services were being listed multiple times in the Cloud Run tool window.
+- [Issue #2838](https://github.com/GoogleCloudPlatform/cloud-code-intellij/issues/2838), [Issue #2841](https://github.com/GoogleCloudPlatform/cloud-code-intellij/issues/2841): Improved managed Cloud SDK reliability.
+
+## Version 20.12.1
+
+### Fixes
+- [Issue #2855](https://github.com/GoogleCloudPlatform/cloud-code-intellij/issues/2855), [Issue #2858](https://github.com/GoogleCloudPlatform/cloud-code-intellij/issues/2858): Fixed an issue affecting IntelliJ 2020.3 IDEs causing Kubernetes development sessions to fail at initialization due to updates in the platform's dependencies.
+
+## Version 20.10.1
+
+### New Features
+- **Secret Manager support:** Many applications require credentials to connect to a database, API keys to invoke a service, or certificates for authentication. Cloud Code now integrates with Google Cloud's Secret Manager to make it easy to create, view, update, and use secrets from within your IDE so you can keep this sensitive data out of your codebase and keep your applications secure. 
+  - View secrets, their versions, permissions, and properties in the Secret Manager panel. Easily leverage secrets from your application using our step-by-step guide in the “Code” tab.
+  
+    ![secret-manager-panel](docs/images/release-notes/secret-manager-panel.png)
+
+  - Create secrets by either right-clicking highlighted text within the editor and selecting **Create Secret in Secret Manager…**, or by clicking the **+** button in the Secret Manager panel.
+  
+    ![secret-create](docs/images/release-notes/secret-create.png)
+    
+  - Leverage the Google Cloud libraries browser to enable the Secret Manager API and import the Secret Manager client library in order to access secrets in your application.
+  
+    ![secret-client-library-browser](docs/images/release-notes/secret-client-library-browser.png)
+
+- **Revamped Google login experience**: Login state is now synced between your IDE and command line, allowing you to log in through either.
+- Cloud Code configures Cloud SDK [Application Default Credentials](https://cloud.google.com/sdk/gcloud/reference/auth/application-default) when you log in through your IDE to enable a seamless Google API authentication experience when developing locally (including Minikube and the Cloud Run local emulator), without you needing to download service account files or manually configure environment variables.
+
+### Updates
+- Reorganized the **Tools > Cloud Code** menu to make Cloud Code actions easier to find.
+
+  ![tools-menu-restructure](docs/images/release-notes/tools-menu-restructure.png)
+  
+- Removed the Google account management component from the main IDE toolbar. Use a project selector or the **Tools > Cloud Code** menu to sign in and out of Google Cloud.
+- Improved **Cloud Run (fully managed)** support:
+  - Deploy Cloud Run services from your IDE to these newly added regions. View the full supported list [here](https://cloud.google.com/run/docs/locations):
+    - `asia-east2` (Hong Kong)
+    - `asia-northeast3` (Seoul, South Korea)
+    - `asia-southeast2` (Jakarta)
+    - `asia-south1` (Mumbai, India)
+    - `europe-west2` (London, UK)
+    - `europe-west3` (Frankfurt, Germany)
+    - `europe-west6` (Zurich, Switzerland)
+    - `southamerica-east1` (São Paulo, Brazil)
+  - Allocate up to 4 vCPUs to container instances with the increased limit.
+  - Allocate up to 4GiB of memory to your services with the increased quota.
+
+### Fixes
+- [Issue #2827](https://github.com/GoogleCloudPlatform/cloud-code-intellij/issues/2827): Fixed an issue where Cloud Code previously prompted to upgrade to an older version of the Skaffold schema.
+
+## Version 20.9.1
+**Note:** Cloud Code now supports the 2020.3 EAP. 
+
+### New Features
+- Kubernetes Explorer support for cluster addition: Add in existing Google Kubernetes Engine (GKE) clusters with the Cloud Code Kubernetes Explorer.
+
+  ![add-gke-cluster-toolbar](docs/images/release-notes/add-gke-cluster-toolbar.png)
+
+  ![add-gke-cluster](docs/images/release-notes/add-gke-cluster.png)
+
+- Automatic Skaffold schema upgrades: Cloud Code detects Skaffold schemas that aren’t up-to-date and prompts (via the Event Log) when a Skaffold schema version upgrade is available for existing Skaffold YAML configuration files.
+
+  ![skaffold-upgrade-event-log](docs/images/release-notes/skaffold-upgrade-event-log.png)
+
+- Alternatively, navigate to Tools > Cloud Code > Kubernetes and select the Check for Skaffold Schemas Upgrades menu item to check for available schema upgrades.
+
+  ![skaffold-upgrade-menu](docs/images/release-notes/skaffold-upgrade-menu.png)
+  
+- Spring GCP Java Libraries for Cloud APIs: Choose between recommended Google Client Java Libraries and Spring GCP Java libraries for all supported Cloud APIs with the Manage Google Cloud APIs dialog.
+
+  ![spring-gcp-apis](docs/images/release-notes/spring-gcp-apis.png)
+
+### Updates
+- Cloud Code Welcome and Release Notes screens now allow creating new sample applications for Cloud Run and Kubernetes.
+
+  ![samples-welcome-screen](docs/images/release-notes/samples-welcome-screen.png)
+
+- The list of available APIs within the Manage Google Cloud APIs dialog is now searchable.
+
+  ![cloud-apis-search](docs/images/release-notes/cloud-apis-search.png)
+
+- Cloud Code provides documentation links for all supported languages for a selected Cloud API.
+
+  ![cloud-api-docs](docs/images/release-notes/cloud-api-docs.png)
+
+- Improved presentation for builders in Cloud Run and Kubernetes run configurations.
+
+  ![builders-better-ui](docs/images/release-notes/builders-better-ui.png)
+
+- Cloud Run Explorer and Kubernetes Explorer have their root node expanded by default, making it easier to see the Kubernetes cluster list and Cloud Run services list.
+
+  ![explorer-expanded-root](docs/images/release-notes/explorer-expanded-root.png)
+  
+### Fixes
+
+- Fixed Cloud Run checks to ensure the presence of all required components when a custom Cloud SDK is used. 
+- Improved Cloud Run deployment logs.
+- Improved user experience for project selection dialog.
+
+## Version 20.8.2
+
+### Updates 
+- Adds a notification when Git is not installed on the machine when cloning a Cloud Code sample instead of throwing an error. 
+
+## Version 20.8.1
+**Note:** The minimum supported platform version has been increased to 2019.3.
+
+### New Features
+- Develop and debug your Cloud Run application locally with the new `Cloud Run: Run Locally` run configuration. In addition to deploying your applications to Cloud Run, you can now iterate on the applications locally in a Cloud Run-like environment.
+ 
+  ![cloud-run-local-run-config](docs/images/release-notes/cloud-run-local-run-config.png)
+\
+  ![cloud-run-local-session](docs/images/release-notes/cloud-run-local-session.png)
+- Build your Kubernetes and Cloud Run container images with Cloud Native Buildpacks for easy containerization; no Dockerfile required!
+\
+  ![cloud-run-buildpacks-run-config](docs/images/release-notes/cloud-run-buildpacks-run-config.png)
+- Enhanced Skaffold artifact builder configurability when bootstrapping projects or modifying Kubernetes run configuration settings. Easily select between available builders such as Jib (for Java projects), Docker, or buildpacks.
+\
+  ![skaffold-buildpacks-run-config](docs/images/release-notes/skaffold-buildpacks-run-config.png)
+- Improved debugging support for Node.js applications with the ability to configure the mapping between the local path of your sources to their remote path in the container.
+\
+  ![debug-source-mappings](docs/images/release-notes/debug-source-mappings.png)
+- Cloud Code now supports validation, documentation on hover, and code completions for hundreds of popular Kubernetes Custom Resource Definitions (CRDs). You can also configure additional CRD locations and access CRDs from the current Kubernetes context.
+\
+  ![krm-zoo](docs/images/release-notes/krm-zoo.png)
+
+### Updates
+- Improved UI for deployment to Cloud Run for Anthos, and better messaging for exposing deployed services. Fields such as cluster and region will now auto-populate with the available options. 
+- Improved error messages throughout the plugin with clearer wording and more actionable suggestions.
+- Added Cloud Run deployment configuration options to the UI, including minimum and maximum number of instances, timeout, and concurrency.
+- Improved logging for the output console and Event Logs.
+
+### Fixes
+- Fixed various binary forward compatibility issues throughout the plugin by building with the minimum supported version of the plugin.
+- Fixed bug where deployments did not delete on finishing when the option was selected.
+- Fixed issue where Skaffold status check was not configurable through an environment variable.
+
+## 20.6.1
+
+**Note to 2020.2 EAP users**: we previously released version 20.5.1 with support for the latest EAP. We have since uncovered some compatibility issues that need to be worked through for an optimal experience, and are therefore removing support for the EAP in this release. Expect a new release as soon as possible supporting the 2020.2 EAP.
+
+### Fixes
+
+- Fixed an OOM error coming from the Kubernetes Explorer.
+- Fixed a NoSuchFileException that occurred when using the Kubernetes explorer with no ‘.kube’ folder.
+- Fixed a NoSuchMethodError coming from the Skaffold notification.
+ 
+## 20.5.1
+
+**Note**: In the next release we plan to bump the minimum supported platform version to 2019.3. If you are on 2019.2, we recommend that you upgrade so that you will continue to get Cloud Code updates.
+
+### New Features
+
+- You can now grab an interactive terminal into pods and containers from the Kubernetes Explorer. This feature is available for IDE versions 2019.3 and later.
+\
+  ![Kubernetes Terminal](docs/images/release-notes/terminal.png)
+- The Kubernetes Explorer now maintains its state through refreshes so that you don’t lose your location in the tree.
+- The Kubernetes Explorer now automatically updates its state on changes so that you are immediately aware of changes to your cluster without having to manually refresh.
+
+### Updates 
+
+- Hovering over a Pod in Kubernetes Explorer will display more information from the Conditions Array of the Pod Status.
+
+### Fixes 
+
+- Fixed an `IllegalStateException: Duplicate Key` error with App Engine causing some Gradle projects to not properly import.
+
+
+## 20.4.3
+
+### Fixes
+
+- Fixes cases where Cloud Code run configurations are not automatically created in non-IDEA JetBrains IDEs (PyCharm, GoLand, WebStorm)
+- Fixes cases where Kubernetes run configurations’ state in non-IDEA JetBrains IDEs cannot be stored
+
+## 20.4.2
+
+This is a patch release following the 20.4.1 release adding Cloud Run support earlier this week.
+
+### Fixes
+
+- Fix for NoClassDefFoundError loading JavaSdk class mainly in PyCharm IDEs
+- Fix for NoClassDefFoundError loading GradleSettings class
+
+## 20.4.1
+
+We are pleased to announce [Cloud Run](https://cloud.google.com/run) support in Cloud Code for IntelliJ!
+
+Cloud Code now makes it easy to deploy your services to Cloud Run fully managed or Cloud Run for Anthos on GKE. You can view your deployed services right in the IDE with the Cloud Run Explorer.
+
+Follow the [Cloud Run quickstart guide](https://cloud.google.com/code/docs/intellij/quickstart-cloud-run), and use our built-in templates to get started quickly. Please file any feature requests or issues you encounter on our [GitHub repo](https://github.com/GoogleCloudPlatform/cloud-code-intellij/issues/new)!
+
+![Cloud Run](docs/images/release-notes/cloud-run.png)
+
+### New Features
+
+- **Cloud Run** support in IntelliJ and JetBrains IDEs
+  - **Cloud Run starter templates** in Java, Node.js, Go, and Python to help you get started quickly
+  - **Deploy your Cloud Run services** directly from the IDE to Cloud Run fully managed or Cloud Run for Anthos on GKE
+  - **Browse your deployed Cloud Run services** without leaving the IDE with the built-in Cloud Run Explorer
+- Configure the log verbosity setting for the Skaffold output in the Kubernetes Run Configurations
+
+### Updates 
+
+- Improved UI for setting the default image repository in the Kubernetes Run Configurations 
+- Improved proxy support - the Kubernetes Explorer now respects configured IntelliJ proxy settings
+
+## 20.2.1
+
+### New Features
+
+- **Enhanced Client Library Browser**. Now with a much improved UI, and support for more languages including Java, Python, Node.js, and Go! View available Google Cloud APIs, enable an API, view API status (enabled or disabled), and install client libraries to consume an API, all from within your IDE. Access via Tools > Cloud Code > Add Cloud Libraries and Manage Cloud APIs  
+\
+  ![client library browser](docs/images/release-notes/client-libraries.png)
+- **Revamped Image Path UX**. For Kubernetes projects, Cloud Code now ships with a significantly improved user experience for setting the image path (e.g. `gcr.io/{gcp-project-name}`). The field will even help suggest a path for you, if possible, based on your current active context.
+\
+  ![default image path](docs/images/release-notes/default-image-path.png)
+- **Automatically created Kubernetes Run Configurations**. When cloning a Cloud Code Kubernetes sample project from the new project wizard, the Kubernetes run configurations are now automatically created, instead of requiring a click on a notification.
+
+### Bug Fixes
+- **Kubernetes Project Detection**. Fixed an issue with the Kubernetes project detection notification where accepting the prompt to create the run configurations didn’t do anything.
+- **2020.1 EAP**. Incremental fixes to support the latest 2020.1 EAP including a frequent runtime error: `window with id="Google Cloud Storage" isn't registered`. 
+- Fixed a language client IllegalStateException: `java.lang.IllegalStateException: completionItem.insertText must not be null`.
+
+## 20.1.3
 
 Patch release following the 20.1.2 release of Cloud Code.
 
@@ -142,7 +540,7 @@ Cloud Code's Kubernetes support is now in Beta! This release includes many new f
 - Cloud Code will now execute the Skaffold process from the directory containing the Skaffold configuration file, fixing relative path issues for multi-service projects.
 - Skaffold configuration files will now validate properly when the JetBrains Kubernetes plugin is also installed.
 
-## 19.9.1 - Latest Release
+## 19.9.1
 
 - Kubernetes deployment events in the event log now show more detailed and structured output for locally port-forwarded services, including service name and namespace.
 
